@@ -44,8 +44,10 @@ We demonstrate the use of `gesel` by creating a simple web application (https://
 
 # Usage
 
-`gesel` aims to find the gene sets that overlap a user-supplied list of genes.
-To demonstrate, we'll consider the following list of gene symbols mixed with Ensembl and Entrez identifiers.
+`gesel`'s analysis involves testing for significant overlap between each reference gene set and the user-supplied list of genes.
+While this is the simplest form of GSEA, it is still effective and avoids the need for users to specify a ranking across the supplied genes.
+The algorithm can also be phrased as a search for the gene sets that contain at least one entry of the user-supplied list. 
+To demonstrate, consider the following list of gene symbols mixed with Ensembl and Entrez identifiers.
 
 ```js
 let user_supplied = [ "SNAP25", "NEUROD6", "ENSG00000123307", "1122" ];
@@ -60,7 +62,7 @@ console.log(input_mapped);
 // [ [ 4639 ], [ 12767 ], [ 12577 ], [ 828 ] ]
 ```
 
-To simplify matters, we'll take the first matching `gesel` gene identifier for each user-supplied gene.
+To simplify matters, we will ony use the first matching `gesel` gene identifier for each user-supplied gene.
 Other applications may prefer to handle multi-mapping genes by, e.g., throwing an error to require clarification from the user.
 
 ```js
@@ -147,7 +149,7 @@ console.log(Array.from(set_members).map(i => all_symbols[i]));
 ```
 
 Each set also has some associated free text in its name and description.
-`gesel` can query this text to find sets of interest, with basic support for wildcard searches.
+`gesel` can query this text to find sets of interest, with some basic support for the `?` and `*` wildcards.
 
 ```js
 let hits = await gesel.searchSetText("9606", "B immunity");
@@ -179,7 +181,7 @@ The output of `searchSetText()` can then be combined with the output of `findOve
 
 In full client-side mode, `gesel` will download the relevant database files from a static file server to the client.
 All calls to `gesel` functions will then perform queries directly on the downloaded files;
-this includes the identification of overlapping sets, searching on the set-related text, and simple extraction of per-set/collection details.
+this includes the identification of overlapping sets, querying the set-related text, and simple extraction of per-set/collection details.
 In this mode, the user pays an up-front cost for the initial download such that all subsequent calculations are fully handled within the client.
 This avoids any further network activity and the associated latency.
 For many applications, the up-front cost is likely to be modest - for example, the total size of the default human gene set database 
@@ -224,13 +226,13 @@ By default, `gesel` uses a simple database that incorporates gene sets from the 
 This is currently hosted for free on GitHub without any need for a specialized backend server.
 However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various HTTP requests.
 For example, we adapted the scripts in the feedstock repository to create a company-specific database of custom gene sets based on biomarker lists and other signatures. 
-This is hosted inside our internal network for querying by our in-house applications.
+This is hosted inside our internal network for use by our in-house `gesel`-based applications.
 
 # Demonstration 
 
-To demonstrate the functionality of `gesel`, we developed a simple web application that searches for interesting gene sets [@geselapp].
+To demonstrate the functionality of `gesel`, we developed a simple web application that tests for gene set enrichment among user-supplied genes [@geselapp].
 This accepts several parameters - namely, the species of interest, the available collections for that species, a list of user-supplied genes, and a free-text query.
-The search returns a list of gene sets in the designated collections that overlap at least one user-supplied gene and satisfy the free-text query.
+The application then returns a list of gene sets in the designated collections that overlap at least one user-supplied gene and satisfy the free-text query.
 All matching gene sets are shown in a table, sorted by increasing p-value to focus on those with significant enrichment.
 Clicking on a row corresponding to a particular gene set shows the identities of its genes, with highlights applied to those in the user-supplied list.
 In addition, the parameters of each search are captured by query strings, allowing users to easily save and share searches by copying the URL from the browser's address bar.
@@ -255,7 +257,7 @@ The idea is to process data at or near the "edge" of the network (e.g., on clien
 By doing so, we can process user requests at greater speed and volume by avoiding a round-trip through the network.
 From a developer perspective, performing the compute on the client is appealing as it requires very little maintenance;
 there is no need to deploy and monitor a custom backend, and concerns over scaling and downtime are effectively irrelevant.
-Indeed, if the analysis of single-cell data can be migrated to the client [@lun2022single], it is straightfoward to do the same for a relatively lightweight task like gene set search.
+Indeed, if the analysis of single-cell data can be migrated to the client [@lun2022single], it is straightfoward to do the same for a relatively lightweight task like GSEA.
 
 We note that there is some room for improvement in `gesel`'s range requests.
 We could bundle multiple ranges into a single request, reducing the burden on the server and network by avoiding separate requests, e.g., when querying the overlapping sets for multiple genes.
