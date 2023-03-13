@@ -32,9 +32,9 @@ Briefly, this task involves quantifying the enrichment of each reference gene se
 where the reference sets are derived from a variety of sources such as previous experimental studies or _de novo_ computational analyses.
 GSEA allows scientists to summarize a large list of gene identifiers into a tangible biological concept such as "syntaxin binding" or "T cell receptor signaling pathway".
 User-supplied lists are typically derived from differential expression analyses of transcriptome-wide assays like RNA sequencing,
-but any list of genes can be used here, e.g., cluster-specific marker lists from single-cell RNA sequencing studies.
+but any list of genes can be used, e.g., cluster-specific marker lists from single-cell RNA sequencing studies.
 
-Given the popularity of GSEA in transcriptomics, it is not surprising that many statistical methods and implementations are already available to perform this analysis.
+Given the popularity of GSEA in transcriptomics, it is not surprising that many software tools are already available to perform this analysis.
 Most existing GSEA tools operate inside frameworks like R/Bioconductor [@young2010gene; @wu2012camera; @korotkevich2021fast] and require both installation of software and associated programming knowledge to use.
 Web applications like Enrichr and GeneTrail [@chen2013enrichr; @backes2007genetrail] provide more user-friendly interfaces that require minimal computational knowledge, targeted to the majority of bench scientists.
 These applications use a conventional backend architecture where the browser sends a request containing the user-supplied list of genes to a backend server;
@@ -185,14 +185,18 @@ let first_hit2 = await gesel.fetchSingleSet("9606", hits2[0]);
 
 The output of `searchSetText()` can then be combined with the output of `findOverlappingSets()` to implement advanced searches in downstream applications.
 
+To demonstrate `gesel`'s functionality, we developed a simple web application that tests for gene set enrichment among user-supplied genes [@geselapp].
+Given several parameters such as a list of user-supplied genes and a free-text query, the application shows a table containing the gene sets that satisfy the search parameters.
+Sets are sorted by increasing p-value to focus on those with significant enrichment.
+Clicking on a row corresponding to a particular gene set shows the identities of its genes, with emphasis applied to those in the user-supplied list.
+In addition, the parameters of each search are captured by query strings, allowing users to easily save and share searches by copying the URL from the browser's address bar.
+
 # Implementation details
 
 `gesel` supports two modes of operation - a "full client-side" mode and a more lightweight "on-demand" mode.
 These differ with respect to how they obtain the database files containing the reference gene sets. 
-
 In full client-side mode, `gesel` will download the relevant database files from the static file server to the client.
-All calls to `gesel` functions will then perform queries directly on the downloaded files;
-this includes the identification of overlapping sets, querying the set-related text, and simple extraction of per-set/collection details.
+All calls to `gesel` functions will then perform queries directly on the downloaded files.
 In this mode, the user pays an up-front cost for the initial download such that all subsequent calculations are fully handled within the client.
 This avoids any further network activity and the associated latency.
 For many applications, the up-front cost is likely to be modest - for example, the total size of the default human gene set database is just over 9 MB - so full client-side operation is simple and practical in most cases.
@@ -213,38 +217,23 @@ The client machine performs all of the calculations and the user receives the re
 Similarly, there is no transfer of user-supplied gene lists to an external server, avoiding any questions over data ownership.
 Most importantly, as each user brings their own compute to the application, it scales to any number of users at no cost to us (i.e., the `gesel` maintainers).
 
-# Preparing database files
+`gesel` works with any database files prepared according to the contract outlined in the feedstock repository [@geselfeedstock].
+This uses some standard compression tricks to reduce the size of the transferred database files, particularly for the mappings between sets and their genes.
+`gesel`'s default database incorporates public gene sets from the Gene Ontology [@ashburner2000go] and, for human and mouse, the majority of the relevant MSigDB subcollections [@liberzon2011molecular].
+However, application developers can easily point `gesel` to a different database by overriding the request URL.
+For example, we adapted the scripts in the feedstock repository to create a company-specific database of custom gene sets based on biomarker lists and other signatures. 
+This is hosted inside our internal network for use by our in-house `gesel`-based applications.
 
-The `gesel` package works with any database files prepared according to the contract outlined in the feedstock repository [@geselfeedstock].
-Briefly, this involves defining all appropriate synonyms for each gene, typically involving one or more of Ensembl identifiers, Entrez identifiers, or gene symbols;
-details about each collection and set, including the name and description;
-the gene membership of each set, and conversely, the identities of the sets that contain each gene;
-and the identities of the sets associated with each token generated from the names/descriptions, for use in free-text searches.
-We expect one set of files per species, meaning that only the relevant files are transferred to the client when one species (usually human or mouse) is of interest.
-
-We apply some standard tricks to reduce the transfer size of the database files, particularly for the mappings between sets and their genes.
+<!--
+We apply some standard tricks to reduce the size of the transferred database files, particularly for the mappings between sets and their genes.
 We convert all sets and genes into integer identifiers to avoid handling large arbitrarily named strings.
 For each set, we sort the gene identifiers and store the differences between adjacent values, decreasing the number of digits (and bytes) that need to be stored and transferred.
 `gesel` will then recover the gene identifiers by computing a cumulative sum for each set on the client machine.
 The same approach is used to shrink the mappings from each gene to the identifiers of the sets in which it belongs.
-Finally, we compress all files to be transferred, relying on the `pako` library [@pako] to perform decompression in the browser.
+Finally, we Gzip-compress all files to be transferred, relying on the `pako` library [@pako] to decompress in the browser.
+-->
 
-`gesel`'s default database incorporates public gene sets from the Gene Ontology [@ashburner2000go] and, for human and mouse, the majority of the relevant MSigDB subcollections [@liberzon2011molecular].
-(To avoid potential issues, only the MSigDB collections with permissive licensing are used here.)
-This is currently hosted for free on GitHub - again, without any need for a specialized backend server.
-However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various HTTP requests.
-For example, we adapted the scripts in the feedstock repository to create a company-specific database of custom gene sets based on biomarker lists and other signatures. 
-This is hosted inside our internal network for use by our in-house `gesel`-based applications.
-
-# Demonstration 
-
-To demonstrate the functionality of `gesel`, we developed a simple web application that tests for gene set enrichment among user-supplied genes [@geselapp].
-This accepts several parameters - namely, the species of interest, the available collections for that species, a list of user-supplied genes, and a free-text query.
-The application then returns a list of gene sets in the designated collections that overlap at least one user-supplied gene and satisfy the free-text query.
-All matching gene sets are shown in a table, sorted by increasing p-value to focus on those with significant enrichment.
-Clicking on a row corresponding to a particular gene set shows the identities of its genes, with highlights applied to those in the user-supplied list.
-In addition, the parameters of each search are captured by query strings, allowing users to easily save and share searches by copying the URL from the browser's address bar.
-
+<!--
 Our demonstration application also showcases some of `gesel`'s flexibility.
 We override `gesel`'s default download function to instruct the browser to cache the responses on disk.
 This means that the user can avoid re-downloading the database files upon subsequent visits to the application.
@@ -262,7 +251,6 @@ From a developer perspective, performing the compute on the client is appealing 
 there is no need to deploy and monitor a custom backend, and concerns over scaling and downtime are effectively irrelevant.
 Indeed, if the analysis of single-cell data can be migrated to the client [@lun2022single], it is straightfoward to do the same for a relatively lightweight task like GSEA.
 
-<!-- 
 We note that there is some room for improvement in `gesel`'s range requests.
 We could bundle multiple ranges into a single request, reducing the burden on the server and network by avoiding separate requests, e.g., when querying the overlapping sets for multiple genes.
 While sensible, we have not implemented this approach because GitHub does not currently respect multipart ranges and we don't want to pay for our own static hosting.
@@ -275,7 +263,7 @@ Nonetheless, both of these ideas may provide some opportunities for improving pe
 
 Thanks to Chris Bolen, Alejandro Chibly, Brandon Kayser and Xiangnan Guan, for the scientific questions that motivated the development of this library;
 Hector Corrado Bravo, for his feedback on the uselessness of the early versions of the free-text search;
-and Allison Vuong and Luke Hoberecht, for recovering ATLL's scarf when he forgot it while thinking about the library design during the team dinner.
+and Allison Vuong and Luke Hoberecht, for recovering ATLL's scarf when he forgot it while thinking about the library design during a team dinner.
 
 # References
 
