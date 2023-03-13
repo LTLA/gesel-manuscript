@@ -473,13 +473,11 @@ console.log(Array.from(set_members).map(i =&gt; all_symbols[i]));
 //   [ &#39;SYNGR3&#39; ],
 //   [ &#39;SLC6A5&#39; ],
 //   [ &#39;SLC38A1&#39; ]
-// ]
-
-Each set also has some associated free text in its name and description.
-`gesel` provides functionality to query this text to find sets of interest, with simple support for wildcard searches.
-
-```js
-let hits = await gesel.searchSetText(&quot;9606&quot;, &quot;B immunity&quot;);
+// ]</code></pre>
+<p>Each set also has some associated free text in its name and
+description. <code>gesel</code> can query this text to find sets of
+interest, with basic support for wildcard searches.</p>
+<pre class="js"><code>let hits = await gesel.searchSetText(&quot;9606&quot;, &quot;B immunity&quot;);
 let first_hit = await gesel.fetchSingleSet(&quot;9606&quot;, hits[0]);
 // {
 //   name: &#39;GO:0019724&#39;,
