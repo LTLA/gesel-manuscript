@@ -525,17 +525,19 @@ example, <code>findOverlappingSets()</code> needs to obtain the mapping
 of each gene to the gene sets of which it is a member. Rather than
 downloading the entire mapping file for all genes, <code>gesel</code>
 will ask the server to return the range of bytes containing only the
-mapping for the desired gene. This avoids transferring the entire file
-to the client, reducing the burden on the client device and network. It
-is suited for applications that expect only sporadic usage of
-<code>gesel</code> such that an up-front download of the entire database
-cannot be justified. It is also more scalable as the number of gene sets
-increases into the millions, where the total size of an up-front
-download may exceed 1 GB and become impractical. Obviously, using this
-mode involves increased network activity and latency from multiple range
-requests if <code>gesel</code> functions are frequently called. This is
-partially mitigated by <code>gesel</code>’s transparent caching of
-responses in memory.</p>
+mapping for the desired gene. This is inspired by similar strategies for
+querying genomics data <span class="citation">(Kancherla et al.
+2020)</span> and avoids transferring the entire file to the client,
+reducing the burden on the client device and network. It is suited for
+applications that expect only sporadic usage of <code>gesel</code> such
+that an up-front download of the entire database cannot be justified. It
+is also more scalable as the number of gene sets increases into the
+millions, where the total size of an up-front download may exceed 1 GB
+and become impractical. Obviously, using this mode involves increased
+network activity and latency from multiple range requests if
+<code>gesel</code> functions are frequently called. This is partially
+mitigated by <code>gesel</code>’s transparent caching of responses in
+memory.</p>
 <p>In both cases, we stress that <code>gesel</code> only requires a
 static file server to host the database files and optionally to support
 range requests. The client machine is still responsible for performing
@@ -567,8 +569,8 @@ one species (usually human or mouse) is of interest.</p>
 <p>We apply some standard tricks to reduce the transfer size of the
 database files, particularly for the mappings between sets and their
 genes. We convert all sets and genes into integer identifiers to avoid
-handling large, arbitrarily named strings. For each set, we sort the
-gene identifiers and store the differences between adjacent values,
+handling large arbitrarily named strings. For each set, we sort the gene
+identifiers and store the differences between adjacent values,
 decreasing the number of digits (and bytes) that need to be stored and
 transferred. <code>gesel</code> will then recover the gene identifiers
 by computing a cumulative sum for each set on the client machine. The
@@ -579,16 +581,15 @@ browser.</p>
 <p>By default, <code>gesel</code> uses a simple database that
 incorporates gene sets from the Gene Ontology <span class="citation">(Ashburner et al. 2000)</span> and (for human and
 mouse) the majority of MSigDB <span class="citation">(Liberzon et al.
-2011)</span>. (To avoid potential issues, only the gene sets with
+2011)</span>. (To avoid potential issues, only the MSigDB gene sets with
 permissive licensing are used here.) This is currently hosted for free
 on GitHub without any need for a specialized backend server. However,
 application developers can easily point <code>gesel</code> to a
-different database by simply changing the URL used in the various
-function calls. For example, we created a database of company-specific
-gene sets based on biomarker lists, custom signatures, etc., with some
-simple adjustments of the scripts in the feedstock repository. This is
-hosted inside our internal network for querying by our in-house
-applications.</p>
+different database by simply changing the URL used in the various HTTP
+requests. For example, we adapted the scripts in the feedstock
+repository to create a company-specific database of custom gene sets
+based on biomarker lists and other signatures. This is hosted inside our
+internal network for querying by our in-house applications.</p>
 </div>
 <div id="demonstration" class="section level1">
 <h1>Demonstration</h1>
@@ -605,27 +606,27 @@ genes, with highlights applied to those in the user-supplied list. In
 addition, the parameters of each search are captured by query strings,
 allowing users to easily save and share searches by copying the URL from
 the browser’s address bar.</p>
-<p>Of particular interest is the ability to customize how
-<code>gesel</code> obtains assets from the static file server. For this
-application, we override <code>gesel</code>’s default download function
-to instruct the browser to cache the responses on disk. This means that
-the user can avoid re-downloading the database files upon subsequent
-visits to the application. On a more technical note, we perform the
-download via a proxy to provide the correct cross-origin resource
-sharing (CORS) headers; this is only necessary as GitHub does not
-provide public CORS access to all of its resources, and can be omitted
-for servers that are more appropriately configured.</p>
-<p>It is worth remembering that this particular website is just a
-demonstration of <code>gesel</code>’s capabilities. As
-<code>gesel</code> is a <a href="https://npmjs.com/package/gesel"><code>npm</code> package</a>, it
-can be easily incorporated into new or existing web applications by
+<p>One particularly useful feature of <code>gesel</code> is the ability
+to customize how it fetches assets from the static file server. For our
+demonstration application, we override <code>gesel</code>’s default
+download function to instruct the browser to cache the responses on
+disk. This means that the user can avoid re-downloading the database
+files upon subsequent visits to the application. On a more technical
+note, we perform the download via a proxy to provide the correct
+cross-origin resource sharing (CORS) headers; this is only necessary as
+GitHub does not provide public CORS access to all of its resources, and
+can be omitted for servers that are more appropriately configured.</p>
+<p>As <code>gesel</code> is a <code>npm</code> package, it can be easily
+incorporated into applications such as our demonstration site by
 following the standard <code>npm</code> installation process. Each
-application is given the freedom to decide how it wants to conduct the
-gene set search. For example, some of our internal applications accept a
-user-supplied gene list but do not support free-text queries, while
-others are only interested in finding the sets containing a single gene
-of interest. This decision then determines whether an application should
-use the full client-side or on-demand request modes.</p>
+application is free to decide how it wants to conduct the gene set
+search. The demonstration site uses almost all of <code>gesel</code>’s
+functionality, but this need not be the case - for example, some of our
+internal applications accept a user-supplied gene list but do not
+support free-text queries, while others are only interested in finding
+the sets containing a single gene of interest. This decision also
+determines whether an application should use the full client-side or
+on-demand request modes.</p>
 </div>
 <div id="further-comments" class="section level1">
 <h1>Further comments</h1>
@@ -641,29 +642,29 @@ downtime are effectively irrelevant. Indeed, if the analysis of
 single-cell data can be migrated to the client <span class="citation">(A. Lun and Kancherla 2022)</span>, it is
 straightfoward to do the same for a relatively lightweight task like
 gene set search.</p>
-<p>We note that <code>gesel</code>’s range requests could be improved by
-bundling multiple ranges into a single request. This reduces the burden
-on the server and network by reducing the number of separate requests,
-e.g., when finding the overlapping sets for multiple genes. While
-sensible, we have not implemented this approach because GitHub does not
-currently respect multipart ranges and we don’t have enough
-discretionary income to pay for our own static file server. Another
-potential improvement is to compress each requested byte range (e.g.,
-with DEFLATE) during database preparation, thus reducing the number of
-bytes that need to be transferred per range request. This is unlikely to
-have much of an effect at the current database size, given that each
-range request involves fewer than 300 bytes on average. Nonetheless,
-both of these ideas may provide some opportunities for improving
-performance as the queries and databases increase in size.</p>
+<p>We note that there is some room for improvement in
+<code>gesel</code>’s range requests. We could bundle multiple ranges
+into a single request, reducing the burden on the server and network by
+avoiding separate requests, e.g., when querying the overlapping sets for
+multiple genes. While sensible, we have not implemented this approach
+because GitHub does not currently respect multipart ranges and we don’t
+want to pay for our own static hosting. We could also compress each
+requested byte range (e.g., with DEFLATE) during database preparation,
+thus reducing the number of bytes that need to be transferred per range
+request. This is unlikely to have much of an effect at the current
+database size, given that each range request involves fewer than 300
+bytes on average. Nonetheless, both of these ideas may provide some
+opportunities for improving performance as the queries and databases
+increase in size.</p>
 </div>
 <div id="acknowledgements" class="section level1">
 <h1>Acknowledgements</h1>
-<p>Thanks to Chris Bolen and XXX, for the scientific questions that
-motivated the development of this library; Hector Corrado Bravo, for his
-feedback on the uselessness of the early versions of the free-text
-search; and Allison Vuong and Luke Hoberecht, for recovering ATLL’s
-scarf when he forgot it while thinking about the library design during
-the team dinner.</p>
+<p>Thanks to Chris Bolen and colleagues, for the scientific questions
+that motivated the development of this library; Hector Corrado Bravo,
+for his feedback on the uselessness of the early versions of the
+free-text search; and Allison Vuong and Luke Hoberecht, for recovering
+ATLL’s scarf when he forgot it while thinking about the library design
+during the team dinner.</p>
 </div>
 <div id="references" class="section level1 unnumbered">
 <h1 class="unnumbered">References</h1>
@@ -674,6 +675,13 @@ Cherry, A. P. Davis, et al. 2000. <span>“<span class="nocase"><span>G</span>en
 biology. <span>T</span>he <span>G</span>ene <span>O</span>ntology
 <span>C</span>onsortium</span>.”</span> <em>Nat Genet</em> 25 (1):
 25–29.
+</div>
+<div id="ref-kancherla2020epiviz" class="csl-entry">
+Kancherla, J., Y. Yang, H. Chae, and H. Corrada Bravo. 2020.
+<span>“<span class="nocase"><span>E</span>piviz <span>F</span>ile
+<span>S</span>erver: <span>Q</span>uery, transform and interactively
+explore data from indexed genomic files</span>.”</span>
+<em>Bioinformatics</em> 36 (18): 4682–90.
 </div>
 <div id="ref-liberzon2011molecular" class="csl-entry">
 Liberzon, A., A. Subramanian, R. Pinchback, H. ttir, P. Tamayo, and J.
