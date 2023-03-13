@@ -1,5 +1,5 @@
 ---
-title: "gesel: a Javascript package for client-side gene search searches"
+title: "gesel: a Javascript package for client-side gene set enrichment"
 tags:
   - Javascript
   - bioinformatics
@@ -17,6 +17,30 @@ bibliography: ref.bib
 # Summary
 
 # Statement of need
+
+Gene set enrichment analyses (GSEA) are commonly used to interpret the biological activity of a user-supplied list of interesting genes [@subramanian2005gene]. 
+Briefly, this task involves quantifying the enrichment of each reference gene set's members inside the user-supplied list,
+where the reference sets are derived from a variety of sources such as previous experimental studies or _de novo_ computational analyses.
+GSEA allows scientists to summarize a large list of gene identifiers into a tangible biological concept such as "syntaxin binding" or "T cell receptor signaling pathway".
+User-supplied lists are most typically derived from differential expression analyses of transcriptome-wide assays like RNA sequencing,
+but any list of genes can be used here, e.g., cluster-specific marker lists from single-cell RNA sequencing studies.
+
+Given the popularity of GSEA in transcriptomics, it is not surprising that many statistical methods and implementations are already available to perform this analysis.
+Most existing GSEA tools operate inside frameworks like R/Bioconductor [@young2010gene; @wu2012camera; @korotkevich2021fast] and require both installation of software and associated programming knowledge to use.
+Web applications like Enrichr and GeneTrail [@chen2013enrichr; @backes2007genetrail] provide more user-friendly interfaces that require less prior computational knowledge, targeted to the majority of bench scientists.
+These applications use a conventional backend architecture where the browser sends a request containing the user-supplied list of genes to a backend server;
+the backend then performs the analysis and returns the results to the user's device (i.e., the client) for inspection.
+
+While common, this backend-based architecture is subject to a number of concerns around cost, scalability, latency, and data ownership.
+The application maintainer is responsible for provisioning, deploying, monitoring and maintaining a backend server, which requires both money and time.
+The maintainer is also responsible for scaling up the backend compute in response to increased usage, further increasing costs in an unpredictable manner. 
+The user-supplied lists need to be transferred to the backend and the results need to be transferred back, introducing latency to the user experience.
+Finally, the fact that the user's inputs are accessible to the backend introduces potential issues of data ownership, e.g., for confidential biomarker lists or signatures.
+
+Here, we present `gesel` (https://npmjs.com/packages/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
+Web applications can easily incorporate `gesel` via the standard `npm` installation process, enabling developers to create user-friendly interfaces for GSEA in different contexts.
+The browser will then handle all GSEA-related computation within these applications, eliminating the responsibility of maintaining a backend and avoiding any transfer of user data.
+We demonstrate the use of `gesel` by creating a simple web application (https://ltla.github.io/gesel-app) for identifying interesting gene sets based on overlaps with user-supplied lists.
 
 # Usage
 
