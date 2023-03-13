@@ -381,16 +381,15 @@ gene set enrichment</h1>
 <div id="summary" class="section level1">
 <h1>Summary</h1>
 <p><code>gesel</code> is a Javascript package for performing gene set
-enrichment analyses within the browser. Developers can incorporate
-<code>gesel</code> into their web applications to provide gene set
-enrichment capabilities to their user experience. Importantly,
-<code>gesel</code> operates fully within the user’s device, i.e., the
-client; there is no need for a dedicated backend server to perfrom the
-computation. This eliminates concerns around cost, scalability, latency,
-and data ownership that are associated with a backend architecture. We
+enrichment analyses within the browser. All calculations are performed
+on the client device, without any no need for a dedicated backend
+server. This eliminates concerns around cost, scalability, latency, and
+data ownership that are associated with a backend-based architecture. We
 demonstrate the use of <code>gesel</code> with a basic web application
 that performs enrichment analyses on user-supplied genes with sets
-derived from the Gene Ontology and MSigDB.</p>
+derived from the Gene Ontology and MSigDB. Developers can also use
+<code>gesel</code> to incorporate gene set enrichment capabilities into
+their own applications.</p>
 </div>
 <div id="statement-of-need" class="section level1">
 <h1>Statement of need</h1>
@@ -403,11 +402,10 @@ derived from a variety of sources such as previous experimental studies
 or <em>de novo</em> computational analyses. GSEA allows scientists to
 summarize a large list of gene identifiers into a tangible biological
 concept such as “syntaxin binding” or “T cell receptor signaling
-pathway”. User-supplied lists are most typically derived from
-differential expression analyses of transcriptome-wide assays like RNA
-sequencing, but any list of genes can be used here, e.g.,
-cluster-specific marker lists from single-cell RNA sequencing
-studies.</p>
+pathway”. User-supplied lists are typically derived from differential
+expression analyses of transcriptome-wide assays like RNA sequencing,
+but any list of genes can be used here, e.g., cluster-specific marker
+lists from single-cell RNA sequencing studies.</p>
 <p>Given the popularity of GSEA in transcriptomics, it is not surprising
 that many statistical methods and implementations are already available
 to perform this analysis. Most existing GSEA tools operate inside
@@ -415,7 +413,7 @@ frameworks like R/Bioconductor <span class="citation">(Young et al.
 2010; Wu and Smyth 2012; Korotkevich et al. 2021)</span> and require
 both installation of software and associated programming knowledge to
 use. Web applications like Enrichr and GeneTrail <span class="citation">(Chen et al. 2013; Backes et al. 2007)</span> provide
-more user-friendly interfaces that require less prior computational
+more user-friendly interfaces that require minimal computational
 knowledge, targeted to the majority of bench scientists. These
 applications use a conventional backend architecture where the browser
 sends a request containing the user-supplied list of genes to a backend
@@ -428,10 +426,11 @@ monitoring and maintaining a backend server, which requires both money
 and time. The maintainer is also responsible for scaling up the backend
 compute in response to increased usage, further increasing costs in an
 unpredictable manner. The user-supplied lists need to be transferred to
-the backend and the results need to be transferred back, introducing
-latency to the user experience. Finally, the fact that the user’s inputs
-are accessible to the backend introduces potential issues of data
-ownership, e.g., for confidential biomarker lists or signatures.</p>
+the backend and the results need to be transferred back to the client,
+introducing latency to the user experience. Finally, the fact that the
+user’s inputs are accessible to the backend introduces potential issues
+of data ownership, e.g., for confidential biomarker lists or
+signatures.</p>
 <p>Here, we present <code>gesel</code> (<a href="https://npmjs.com/package/gesel" class="uri">https://npmjs.com/package/gesel</a>), a Javascript library
 for gene set enrichment analyses that operates fully inside the client.
 Web applications can easily incorporate <code>gesel</code> via the
@@ -458,7 +457,7 @@ with Ensembl and Entrez identifiers.</p>
 <pre class="js"><code>let user_supplied = [ &quot;SNAP25&quot;, &quot;NEUROD6&quot;, &quot;ENSG00000123307&quot;, &quot;1122&quot; ];</code></pre>
 <p>Our first task is to map these user-supplied gene identifiers to
 <code>gesel</code>’s internal identifiers. In this case, we are
-interested in human gene sets, hence the taxonomy ID in the
+interested in human gene sets, hence the taxonomy identifier in the
 <code>searchGenes()</code> call.</p>
 <pre class="js"><code>let input_mapped = await gesel.searchGenes(&quot;9606&quot;, user_supplied);
 console.log(input_mapped);
@@ -569,9 +568,11 @@ searches in downstream applications.</p>
 <div id="implementation-details" class="section level1">
 <h1>Implementation details</h1>
 <p><code>gesel</code> supports two modes of operation - a “full
-client-side” mode and a more lightweight “on-demand request” mode.</p>
+client-side” mode and a more lightweight “on-demand” mode. These differ
+with respect to how they obtain the database files containing the
+reference gene sets.</p>
 <p>In full client-side mode, <code>gesel</code> will download the
-relevant database files from a static file server to the client. All
+relevant database files from the static file server to the client. All
 calls to <code>gesel</code> functions will then perform queries directly
 on the downloaded files; this includes the identification of overlapping
 sets, querying the set-related text, and simple extraction of
@@ -580,39 +581,33 @@ for the initial download such that all subsequent calculations are fully
 handled within the client. This avoids any further network activity and
 the associated latency. For many applications, the up-front cost is
 likely to be modest - for example, the total size of the default human
-gene set database (containing over 40,000 sets, including the Gene
-Ontology <span class="citation">(Ashburner et al. 2000)</span> and most
-of MSigDB <span class="citation">(Liberzon et al. 2011)</span>) is just
-over 9 MB - so full client-side operation is simple and practical in
-most cases.</p>
-<p>In the on-demand request mode, <code>gesel</code> will perform HTTP
-range requests to fetch relevant slices of each database file. For
-example, <code>findOverlappingSets()</code> needs to obtain the mapping
-of each gene to the gene sets of which it is a member. Rather than
-downloading the entire mapping file for all genes, <code>gesel</code>
-will ask the server to return the range of bytes containing only the
-mapping for the desired gene. This is inspired by similar strategies for
-querying genomics data <span class="citation">(Kancherla et al.
-2020)</span> and avoids transferring the entire file to the client,
-reducing the burden on the client device and network. It is suited for
+gene set database is just over 9 MB - so full client-side operation is
+simple and practical in most cases.</p>
+<p>In the on-demand mode, <code>gesel</code> will perform HTTP range
+requests to fetch relevant slices of each database file. For example,
+<code>findOverlappingSets()</code> needs to obtain the mapping of each
+gene to the gene sets of which it is a member. Rather than downloading
+the entire mapping file, <code>gesel</code> will ask the server to
+return the range of bytes containing only the mapping for the desired
+gene. This is inspired by similar strategies for querying genomics data
+<span class="citation">(Kancherla et al. 2020)</span> and reduces the
+burden on the client device and network. Range requests are suited for
 applications that expect only sporadic usage of <code>gesel</code> such
-that an up-front download of the entire database cannot be justified. It
-is also more scalable as the number of gene sets increases into the
-millions, where the total size of an up-front download may exceed 1 GB
-and become impractical. Obviously, using this mode involves increased
-network activity and latency from multiple range requests if
-<code>gesel</code> functions are frequently called. This is partially
-mitigated by <code>gesel</code>’s transparent caching of responses in
-memory.</p>
+that an up-front download of the entire database cannot be justified.
+They are also more scalable as the number of gene sets increases into
+the millions, where an up-front download may become too large to be
+practical. Obviously, using this mode involves increased network
+activity and latency from multiple range requests if <code>gesel</code>
+functions are frequently called. This is partially mitigated by
+<code>gesel</code>’s transparent caching of responses in memory.</p>
 <p>In both cases, we stress that <code>gesel</code> only requires a
 static file server to host the database files and optionally to support
-range requests. The client machine is still responsible for performing
-all of the calculations, which provides a number of advantages. We do
-not have to provision and maintain a dedicated back-end server to handle
-the <code>gesel</code> queries, saving time and money; rather, any
-generic static server can be used including free offerings, e.g., from
-GitHub. The user receives the results as soon as the calculations are
-complete, enabling low-latency applications that minimize network
+range requests. We do not have to provision and maintain a dedicated
+back-end server to handle the <code>gesel</code> queries, saving time
+and money; rather, any generic static server can be used, including free
+offerings, e.g., from GitHub. The client machine performs all of the
+calculations and the user receives the results immediately on
+completion, enabling low-latency applications that minimize network
 traffic. Similarly, there is no transfer of user-supplied gene lists to
 an external server, avoiding any questions over data ownership. Most
 importantly, as each user brings their own compute to the application,
@@ -622,7 +617,7 @@ it scales to any number of users at no cost to us (i.e., the
 <div id="preparing-database-files" class="section level1">
 <h1>Preparing database files</h1>
 <p>The <code>gesel</code> package works with any database files prepared
-according to the contract outlined in the feedstock repository <span class="citation">(A. T. L. Lun 2023a)</span>. Briefly, this involves
+according to the contract outlined in the feedstock repository <span class="citation">(A. T. L. Lun 2023)</span>. Briefly, this involves
 defining all appropriate synonyms for each gene, typically involving one
 or more of Ensembl identifiers, Entrez identifiers, or gene symbols;
 details about each collection and set, including the name and
@@ -644,57 +639,51 @@ same approach is used to shrink the mappings from each gene to the
 identifiers of the sets in which it belongs. Finally, we compress all
 files to be transferred, relying on the <code>pako</code> library <span class="citation">(Puzrin and Tupitsin 2023)</span> to perform
 decompression in the browser.</p>
-<p>By default, <code>gesel</code> uses a simple database that
-incorporates gene sets from the Gene Ontology <span class="citation">(Ashburner et al. 2000)</span> and (for human and
-mouse) the majority of MSigDB <span class="citation">(Liberzon et al.
-2011)</span>. (To avoid potential issues, only the MSigDB gene sets with
-permissive licensing are used here.) This is currently hosted for free
-on GitHub without any need for a specialized backend server. However,
-application developers can easily point <code>gesel</code> to a
-different database by simply changing the URL used in the various HTTP
-requests. For example, we adapted the scripts in the feedstock
-repository to create a company-specific database of custom gene sets
-based on biomarker lists and other signatures. This is hosted inside our
-internal network for use by our in-house <code>gesel</code>-based
-applications.</p>
+<p><code>gesel</code>’s default database incorporates public gene sets
+from the Gene Ontology <span class="citation">(Ashburner et al.
+2000)</span> and, for human and mouse, the majority of the relevant
+MSigDB subcollections <span class="citation">(Liberzon et al.
+2011)</span>. (To avoid potential issues, only the MSigDB collections
+with permissive licensing are used here.) This is currently hosted for
+free on GitHub - again, without any need for a specialized backend
+server. However, application developers can easily point
+<code>gesel</code> to a different database by simply changing the URL
+used in the various HTTP requests. For example, we adapted the scripts
+in the feedstock repository to create a company-specific database of
+custom gene sets based on biomarker lists and other signatures. This is
+hosted inside our internal network for use by our in-house
+<code>gesel</code>-based applications.</p>
 </div>
 <div id="demonstration" class="section level1">
 <h1>Demonstration</h1>
 <p>To demonstrate the functionality of <code>gesel</code>, we developed
 a simple web application that tests for gene set enrichment among
-user-supplied genes <span class="citation">(A. T. L. Lun 2023b)</span>.
-This accepts several parameters - namely, the species of interest, the
-available collections for that species, a list of user-supplied genes,
-and a free-text query. The application then returns a list of gene sets
-in the designated collections that overlap at least one user-supplied
-gene and satisfy the free-text query. All matching gene sets are shown
-in a table, sorted by increasing p-value to focus on those with
-significant enrichment. Clicking on a row corresponding to a particular
-gene set shows the identities of its genes, with highlights applied to
-those in the user-supplied list. In addition, the parameters of each
-search are captured by query strings, allowing users to easily save and
-share searches by copying the URL from the browser’s address bar.</p>
-<p>One particularly useful feature of <code>gesel</code> is the ability
-to customize how it fetches assets from the static file server. For our
-demonstration application, we override <code>gesel</code>’s default
-download function to instruct the browser to cache the responses on
-disk. This means that the user can avoid re-downloading the database
-files upon subsequent visits to the application. On a more technical
-note, we perform the download via a proxy to provide the correct
-cross-origin resource sharing (CORS) headers; this is only necessary as
-GitHub does not provide public CORS access to all of its resources, and
-can be omitted for servers that are more appropriately configured.</p>
-<p>As <code>gesel</code> is a <code>npm</code> package, it can be easily
-incorporated into applications such as our demonstration site by
-following the standard <code>npm</code> installation process. Each
-application is free to decide how it wants to conduct the gene set
-search. The demonstration site uses almost all of <code>gesel</code>’s
-functionality, but this need not be the case - for example, some of our
-internal applications accept a user-supplied gene list but do not
-support free-text queries, while others are only interested in finding
-the sets containing a single gene of interest. This decision also
-determines whether an application should use the full client-side or
-on-demand request modes.</p>
+user-supplied genes <span class="citation">(A. T. L. Lun and Kancherla
+2023)</span>. This accepts several parameters - namely, the species of
+interest, the available collections for that species, a list of
+user-supplied genes, and a free-text query. The application then returns
+a list of gene sets in the designated collections that overlap at least
+one user-supplied gene and satisfy the free-text query. All matching
+gene sets are shown in a table, sorted by increasing p-value to focus on
+those with significant enrichment. Clicking on a row corresponding to a
+particular gene set shows the identities of its genes, with highlights
+applied to those in the user-supplied list. In addition, the parameters
+of each search are captured by query strings, allowing users to easily
+save and share searches by copying the URL from the browser’s address
+bar.</p>
+<p>Our demonstration application also showcases some of
+<code>gesel</code>’s flexibility. We override <code>gesel</code>’s
+default download function to instruct the browser to cache the responses
+on disk. This means that the user can avoid re-downloading the database
+files upon subsequent visits to the application. In addition, each
+application is free to decide how it wants to conduct its GSEA step. Our
+demonstration uses almost all of <code>gesel</code>’s functionality to
+provide a more advanced interface that includes free-text queries, but
+this need not be the case - for example, some of our internal
+applications only accept a user-supplied gene list (i.e., using only
+<code>findOverlappingSets()</code>), while others are only interested in
+finding the sets containing a single gene of interest (using only
+<code>fetchSetsForGene()</code>).</p>
 </div>
 <div id="further-comments" class="section level1">
 <h1>Further comments</h1>
@@ -710,20 +699,14 @@ downtime are effectively irrelevant. Indeed, if the analysis of
 single-cell data can be migrated to the client <span class="citation">(A. Lun and Kancherla 2022)</span>, it is
 straightfoward to do the same for a relatively lightweight task like
 GSEA.</p>
-<p>We note that there is some room for improvement in
-<code>gesel</code>’s range requests. We could bundle multiple ranges
-into a single request, reducing the burden on the server and network by
-avoiding separate requests, e.g., when querying the overlapping sets for
-multiple genes. While sensible, we have not implemented this approach
-because GitHub does not currently respect multipart ranges and we don’t
-want to pay for our own static hosting. We could also compress each
-requested byte range (e.g., with DEFLATE) during database preparation,
-thus reducing the number of bytes that need to be transferred per range
-request. This is unlikely to have much of an effect at the current
-database size, given that each range request involves fewer than 300
-bytes on average. Nonetheless, both of these ideas may provide some
-opportunities for improving performance as the queries and databases
-increase in size.</p>
+<!-- 
+We note that there is some room for improvement in `gesel`'s range requests.
+We could bundle multiple ranges into a single request, reducing the burden on the server and network by avoiding separate requests, e.g., when querying the overlapping sets for multiple genes.
+While sensible, we have not implemented this approach because GitHub does not currently respect multipart ranges and we don't want to pay for our own static hosting.
+We could also compress each requested byte range (e.g., with DEFLATE) during database preparation, thus reducing the number of bytes that need to be transferred per range request.
+This is unlikely to have much of an effect at the current database size, given that each range request involves fewer than 300 bytes on average.
+Nonetheless, both of these ideas may provide some opportunities for improving performance as the queries and databases increase in size.
+-->
 </div>
 <div id="acknowledgements" class="section level1">
 <h1>Acknowledgements</h1>
@@ -777,10 +760,11 @@ signatures database
 3.0</span>.”</span> <em>Bioinformatics</em> 27 (12): 1739–40.
 </div>
 <div id="ref-geselfeedstock" class="csl-entry">
-Lun, A. T. L. 2023a. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="https://github.com/LTLA/gesel-feedstock">https://github.com/LTLA/gesel-feedstock</a>.
+Lun, A. T. L. 2023. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="https://github.com/LTLA/gesel-feedstock">https://github.com/LTLA/gesel-feedstock</a>.
 </div>
 <div id="ref-geselapp" class="csl-entry">
-———. 2023b. <span>“Gesel Gene Set Search.”</span> <a href="https://ltla.github.io/gesel-app">https://ltla.github.io/gesel-app</a>.
+Lun, A. T. L., and J. Kancherla. 2023. <span>“Gesel Gene Set
+Search.”</span> <a href="https://ltla.github.io/gesel-app">https://ltla.github.io/gesel-app</a>.
 </div>
 <div id="ref-lun2022single" class="csl-entry">
 Lun, A., and J. Kancherla. 2022. <span>“Single-Cell Data Analysis in the
