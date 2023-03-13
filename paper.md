@@ -157,8 +157,8 @@ All calls to `gesel` functions will then perform queries directly on the downloa
 this includes the identification of overlapping sets, searching on the set-related text, and simple extraction of per-set/collection details.
 In this mode, the user pays an up-front cost for the initial download such that all subsequent calculations are fully handled within the client.
 This avoids any further network activity and the associated latency.
-For many applications, the up-front cost is likely to be modest - 
-for example, the total size of the default human gene set database (containing over 40,000 sets, including the Gene Ontology and most of MSigDB) is just over 9 MB -
+For many applications, the up-front cost is likely to be modest - for example, the total size of the default human gene set database 
+(containing over 40,000 sets, including the Gene Ontology [@ashburner2000go] and most of MSigDB [@liberzon2011molecular]) is just over 9 MB -
 so full client-side operation is simple and practical in most cases.
 
 In the on-demand request mode, `gesel` will perform HTTP range requests to fetch relevant slices of each database file.
@@ -178,9 +178,28 @@ The user receives the results as soon as the calculations are complete, enabling
 Similarly, there is no transfer of user-supplied gene lists to an external server, avoiding any questions over data ownership.
 Most importantly, as each user brings their own compute to the application, it scales to any number of users at no cost to us (i.e., the `gesel` maintainers).
 
-# Preparing the database
+# Preparing database files
 
+The `gesel` package works with any database files prepared according to the contract outlined in the feedstock repository [@geselfeedstock].
+Briefly, this involves defining all appropriate synonyms for each gene, typically involving one or more of Ensembl identifiers, Entrez identifiers, or gene symbols;
+details about each collection and set, including the name and description;
+the gene membership of each set, and conversely, the identities of the sets that contain each gene;
+and the identities of the sets associated with each token generated from the names/descriptions, for use in free-text searches.
+We expect one set of files per species, meaning that only the relevant files are transferred to the client when one species (usually human or mouse) is of interest.
 
+We apply some standard tricks to reduce the transfer size of the database files, particularly for the mappings between sets and their genes.
+We convert all sets and genes into integer identifiers to avoid handling large, arbitrarily named strings.
+For each set, we sort the gene identifiers and store the differences between adjacent values, decreasing the number of digits (and bytes) that need to be stored and transferred.
+`gesel` will then recover the gene identifiers by computing a cumulative sum for each set on the client machine.
+The same approach is used to shrink the mappings from each gene to the identifiers of the sets in which it belongs.
+Finally, we compress all files to be transferred, relying on the `pako` library [@pako] to perform decompression in the browser.
+
+By default, `gesel` uses a simple database that incorporates gene sets from the Gene Ontology [@ashburner2000go] and (for human and mouse) the majority of MSigDB [@liberzon2011molecular].
+(To avoid potential issues, only the gene sets with permissive licensing are used here.)
+This is currently hosted for free on GitHub using the Releases of the feedstock repository, without any need for a specialized backend server.
+However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various function calls.
+For example, we created a database of company-specific gene sets based on biomarker lists, custom signatures, etc., with some simple adjustments of the scripts in the feedstock repository. 
+This is hosted inside our internal network for querying by our in-house applications.
 
 # Demonstration 
 
