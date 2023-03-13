@@ -1,7 +1,7 @@
 ---
-title: "gesel: a Javascript package for client-side gene set enrichment"
+title: "gesel: a JavaScript package for client-side gene set enrichment"
 tags:
-  - Javascript
+  - JavaScript
   - bioinformatics
 authors:
   - name: Aaron T. L. Lun
@@ -19,7 +19,7 @@ bibliography: ref.bib
 
 # Summary
 
-`gesel` is a Javascript package for performing gene set enrichment analyses within the browser. 
+`gesel` is a JavaScript package for performing gene set enrichment analyses within the browser. 
 All calculations are performed on the client device, without any no need for a dedicated backend server. 
 This eliminates concerns around cost, scalability, latency, and data ownership that are associated with a backend-based architecture.
 We demonstrate the use of `gesel` with a basic web application that performs enrichment analyses on user-supplied genes with sets derived from the Gene Ontology and MSigDB.
@@ -46,7 +46,7 @@ The maintainer is also responsible for scaling up the backend compute in respons
 The user-supplied lists need to be transferred to the backend and the results need to be transferred back to the client, introducing latency to the user experience.
 Finally, the fact that the user's inputs are accessible to the backend introduces potential issues of data ownership, e.g., for confidential biomarker lists or signatures.
 
-Here, we present `gesel` (https://npmjs.com/package/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
+Here, we present `gesel` (https://npmjs.com/package/gesel), a JavaScript library for gene set enrichment analyses that operates fully inside the client.
 Web applications can easily incorporate `gesel` via the standard `npm` installation process, enabling developers to create user-friendly interfaces for GSEA in different contexts.
 The browser will then handle all GSEA-related computation within these applications, eliminating the responsibility of maintaining a backend and avoiding any transfer of user data.
 This obviates the problems associated with a backend architecture and allows the application to scale naturally to any number of user devices.
