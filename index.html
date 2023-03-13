@@ -380,6 +380,17 @@ gene set enrichment</h1>
 
 <div id="summary" class="section level1">
 <h1>Summary</h1>
+<p><code>gesel</code> is a Javascript package for performing gene set
+enrichment analyses within the browser. Developers can incorporate
+<code>gesel</code> into their web applications to provide gene set
+enrichment capabilities to their user experience. Importantly,
+<code>gesel</code> operates fully within the user’s device, i.e., the
+client; there is no need for a dedicated backend server to perfrom the
+computation. This eliminates concerns around cost, scalability, latency,
+and data ownership that are associated with a backend architecture. We
+demonstrate the use of <code>gesel</code> with a basic web application
+that perform enrichment analyses on user-supplied genes with sets
+derived from the Gene Ontology and MSigDB.</p>
 </div>
 <div id="statement-of-need" class="section level1">
 <h1>Statement of need</h1>
@@ -421,14 +432,16 @@ the backend and the results need to be transferred back, introducing
 latency to the user experience. Finally, the fact that the user’s inputs
 are accessible to the backend introduces potential issues of data
 ownership, e.g., for confidential biomarker lists or signatures.</p>
-<p>Here, we present <code>gesel</code> (<a href="https://npmjs.com/packages/gesel" class="uri">https://npmjs.com/packages/gesel</a>), a Javascript library
+<p>Here, we present <code>gesel</code> (<a href="https://npmjs.com/package/gesel" class="uri">https://npmjs.com/package/gesel</a>), a Javascript library
 for gene set enrichment analyses that operates fully inside the client.
 Web applications can easily incorporate <code>gesel</code> via the
 standard <code>npm</code> installation process, enabling developers to
 create user-friendly interfaces for GSEA in different contexts. The
 browser will then handle all GSEA-related computation within these
 applications, eliminating the responsibility of maintaining a backend
-and avoiding any transfer of user data. We demonstrate the use of
+and avoiding any transfer of user data. This obviates the problems
+associated with a backend architecture and allows the application to
+scale naturally to any number of user devices. We demonstrate the use of
 <code>gesel</code> by creating a simple web application (<a href="https://ltla.github.io/gesel-app" class="uri">https://ltla.github.io/gesel-app</a>) for identifying
 interesting gene sets based on overlaps with user-supplied lists.</p>
 </div>
@@ -436,12 +449,12 @@ interesting gene sets based on overlaps with user-supplied lists.</p>
 <h1>Usage</h1>
 <p><code>gesel</code>’s analysis involves testing for significant
 overlap between each reference gene set and the user-supplied list of
-genes. While this is the simplest form of GSEA, it is still effective
-and avoids the need for users to specify a ranking across the supplied
-genes. The algorithm can also be phrased as a search for the gene sets
-that contain at least one entry of the user-supplied list. To
-demonstrate, consider the following list of gene symbols mixed with
-Ensembl and Entrez identifiers.</p>
+genes. While this is the simplest form of GSEA, it is fast, intuitive,
+mostly effective and avoids the need for users to specify a ranking
+across the supplied genes. The algorithm can also be phrased as a search
+for the gene sets that contain at least one entry of the user-supplied
+list. To demonstrate, consider the following list of gene symbols mixed
+with Ensembl and Entrez identifiers.</p>
 <pre class="js"><code>let user_supplied = [ &quot;SNAP25&quot;, &quot;NEUROD6&quot;, &quot;ENSG00000123307&quot;, &quot;1122&quot; ];</code></pre>
 <p>Our first task is to map these user-supplied gene identifiers to
 <code>gesel</code>’s internal identifiers. In this case, we are
