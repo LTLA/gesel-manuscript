@@ -43,11 +43,11 @@ The maintainer is also responsible for scaling up the backend compute in respons
 The user-supplied lists need to be transferred to the backend and the results need to be transferred back, introducing latency to the user experience.
 Finally, the fact that the user's inputs are accessible to the backend introduces potential issues of data ownership, e.g., for confidential biomarker lists or signatures.
 
-Here, we present `gesel` (https://npmjs.com/package/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
+Here, we present `gesel`, a Javascript library for gene set enrichment analyses that operates fully inside the client.
 Web applications can easily incorporate `gesel` via the standard `npm` installation process, enabling developers to create user-friendly interfaces for GSEA in different contexts.
 The browser will then handle all GSEA-related computation within these applications, eliminating the responsibility of maintaining a backend and avoiding any transfer of user data.
 This obviates the problems associated with a backend architecture and allows the application to scale naturally to any number of user devices.
-We demonstrate the use of `gesel` by creating a simple web application (https://ltla.github.io/gesel-app) for identifying interesting gene sets based on overlaps with user-supplied lists.
+We demonstrate the use of `gesel` by creating a simple web application for identifying interesting gene sets based on overlaps with user-supplied lists.
 
 # Usage
 
