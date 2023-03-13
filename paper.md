@@ -16,7 +16,11 @@ bibliography: ref.bib
 
 # Summary
 
-
+`gesel` is a Javascript package for performing gene set enrichment analyses within the browser. 
+Developers can incorporate `gesel` into their web applications to provide gene set enrichment capabilities to their user experience.
+Importantly, `gesel` operates fully within the user's device, i.e., the client; there is no need for a dedicated backend server to perfrom the computation.
+This eliminates concerns around cost, scalability, latency, and data ownership that are associated with a backend architecture.
+We demonstrate the use of `gesel` with a basic web application that perform enrichment analyses on user-supplied genes with sets derived from the Gene Ontology and MSigDB.
 
 # Statement of need
 
