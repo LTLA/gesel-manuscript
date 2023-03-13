@@ -215,11 +215,36 @@ Of particular interest is the ability to customize how `gesel` obtains assets fr
 For this application, we override `gesel`'s default download function to instruct the browser to cache the responses on disk.
 This means that the user can avoid re-downloading the database files upon subsequent visits to the application.
 On a more technical note, we perform the download via a proxy to provide the correct cross-origin resource sharing (CORS) headers;
-this is only necessary as GitHub does not provide public CORS access to all of its resources, and can be omitted for correctly configured servers.
+this is only necessary as GitHub does not provide public CORS access to all of its resources, and can be omitted for servers that are more appropriately configured. 
+
+It is worth remembering that this particular website is just a demonstration of `gesel`'s capabilities.
+As `gesel` is a [`npm` package](https://npmjs.com/package/gesel), it can be easily incorporated into new or existing web applications by following the standard `npm` installation process.
+Each application is given the freedom to decide how it wants to conduct the gene set search.
+For example, some of our internal applications accept a user-supplied gene list but do not support free-text queries,
+while others are only interested in finding the sets containing a single gene of interest.
+This decision then determines whether an application should use the full client-side or on-demand request modes.
 
 # Further comments
 
+`gesel`'s design is greatly inspired by the "edge computing" paradigm.
+The idea is to process data at or near the "edge" of the network (e.g., on client devices) rather than centralizing the compute in a data center.
+By doing so, we can process user requests at greater speed and volume by avoiding a round-trip through the network.
+From a developer perspective, performing the compute on the client is appealing as it requires very little maintenance;
+there is no need to deploy and monitor a custom backend, and concerns over scaling and downtime are effectively irrelevant.
+Indeed, if the analysis of single-cell data can be migrated to the client [@lun2022single], it is straightfoward to do the same for a relatively lightweight task like gene set search.
+
+We note that `gesel`'s range requests could be improved by bundling multiple ranges into a single request.
+This reduces the burden on the server and network by reducing the number of separate requests, e.g., when finding the overlapping sets for multiple genes.
+While sensible, we have not implemented this approach because GitHub does not currently respect multipart ranges and we don't have enough discretionary income to pay for our own static file server.
+Another potential improvement is to compress each requested byte range (e.g., with DEFLATE) during database preparation, thus reducing the number of bytes that need to be transferred per range request.
+This is unlikely to have much of an effect at the current database size, given that each range request involves fewer than 300 bytes on average.
+Nonetheless, both of these ideas may provide some opportunities for improving performance as the queries and databases increase in size.
+
 # Acknowledgements
+
+Thanks to Chris Bolen and XXX, for the scientific questions that motivated the development of this library;
+Hector Corrado Bravo, for his feedback on the uselessness of the early versions of the free-text search;
+and Allison Vuong and Luke Hoberecht, for recovering ATLL's scarf when he forgot it while thinking about the library design during the team dinner.
 
 # References
 
