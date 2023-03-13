@@ -16,6 +16,8 @@ bibliography: ref.bib
 
 # Summary
 
+
+
 # Statement of need
 
 Gene set enrichment analyses (GSEA) are commonly used to interpret the biological activity of a user-supplied list of interesting genes [@subramanian2005gene]. 
@@ -37,15 +39,16 @@ The maintainer is also responsible for scaling up the backend compute in respons
 The user-supplied lists need to be transferred to the backend and the results need to be transferred back, introducing latency to the user experience.
 Finally, the fact that the user's inputs are accessible to the backend introduces potential issues of data ownership, e.g., for confidential biomarker lists or signatures.
 
-Here, we present `gesel` (https://npmjs.com/packages/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
+Here, we present `gesel` (https://npmjs.com/package/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
 Web applications can easily incorporate `gesel` via the standard `npm` installation process, enabling developers to create user-friendly interfaces for GSEA in different contexts.
 The browser will then handle all GSEA-related computation within these applications, eliminating the responsibility of maintaining a backend and avoiding any transfer of user data.
+This obviates the problems associated with a backend architecture and allows the application to scale naturally to any number of user devices.
 We demonstrate the use of `gesel` by creating a simple web application (https://ltla.github.io/gesel-app) for identifying interesting gene sets based on overlaps with user-supplied lists.
 
 # Usage
 
 `gesel`'s analysis involves testing for significant overlap between each reference gene set and the user-supplied list of genes.
-While this is the simplest form of GSEA, it is still effective and avoids the need for users to specify a ranking across the supplied genes.
+While this is the simplest form of GSEA, it is fast, intuitive, mostly effective and avoids the need for users to specify a ranking across the supplied genes.
 The algorithm can also be phrased as a search for the gene sets that contain at least one entry of the user-supplied list. 
 To demonstrate, consider the following list of gene symbols mixed with Ensembl and Entrez identifiers.
 
