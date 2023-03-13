@@ -554,16 +554,16 @@ it scales to any number of users at no cost to us (i.e., the
 <div id="preparing-database-files" class="section level1">
 <h1>Preparing database files</h1>
 <p>The <code>gesel</code> package works with any database files prepared
-according to the contract outlined in the feedstock repository <span class="citation">(Lun 2023)</span>. Briefly, this involves defining all
-appropriate synonyms for each gene, typically involving one or more of
-Ensembl identifiers, Entrez identifiers, or gene symbols; details about
-each collection and set, including the name and description; the gene
-membership of each set, and conversely, the identities of the sets that
-contain each gene; and the identities of the sets associated with each
-token generated from the names/descriptions, for use in free-text
-searches. We expect one set of files per species, meaning that only the
-relevant files are transferred to the client when one species (usually
-human or mouse) is of interest.</p>
+according to the contract outlined in the feedstock repository <span class="citation">(A. T. L. Lun 2023a)</span>. Briefly, this involves
+defining all appropriate synonyms for each gene, typically involving one
+or more of Ensembl identifiers, Entrez identifiers, or gene symbols;
+details about each collection and set, including the name and
+description; the gene membership of each set, and conversely, the
+identities of the sets that contain each gene; and the identities of the
+sets associated with each token generated from the names/descriptions,
+for use in free-text searches. We expect one set of files per species,
+meaning that only the relevant files are transferred to the client when
+one species (usually human or mouse) is of interest.</p>
 <p>We apply some standard tricks to reduce the transfer size of the
 database files, particularly for the mappings between sets and their
 genes. We convert all sets and genes into integer identifiers to avoid
@@ -581,23 +581,89 @@ incorporates gene sets from the Gene Ontology <span class="citation">(Ashburner 
 mouse) the majority of MSigDB <span class="citation">(Liberzon et al.
 2011)</span>. (To avoid potential issues, only the gene sets with
 permissive licensing are used here.) This is currently hosted for free
-on GitHub using the Releases of the feedstock repository, without any
-need for a specialized backend server. However, application developers
-can easily point <code>gesel</code> to a different database by simply
-changing the URL used in the various function calls. For example, we
-created a database of company-specific gene sets based on biomarker
-lists, custom signatures, etc., with some simple adjustments of the
-scripts in the feedstock repository. This is hosted inside our internal
-network for querying by our in-house applications.</p>
+on GitHub without any need for a specialized backend server. However,
+application developers can easily point <code>gesel</code> to a
+different database by simply changing the URL used in the various
+function calls. For example, we created a database of company-specific
+gene sets based on biomarker lists, custom signatures, etc., with some
+simple adjustments of the scripts in the feedstock repository. This is
+hosted inside our internal network for querying by our in-house
+applications.</p>
 </div>
 <div id="demonstration" class="section level1">
 <h1>Demonstration</h1>
+<p>To demonstrate the functionality of <code>gesel</code>, we developed
+a simple web application that searches for interesting gene sets <span class="citation">(A. T. L. Lun 2023b)</span>. This accepts several
+parameters - namely, the species of interest, the available collections
+for that species, a list of user-supplied genes, and a free-text query.
+The search returns a list of gene sets in the designated collections
+that overlap at least one user-supplied gene and satisfy the free-text
+query. All matching gene sets are shown in a table, sorted by increasing
+p-value to focus on those with significant enrichment. Clicking on a row
+corresponding to a particular gene set shows the identities of its
+genes, with highlights applied to those in the user-supplied list. In
+addition, the parameters of each search are captured by query strings,
+allowing users to easily save and share searches by copying the URL from
+the browser’s address bar.</p>
+<p>Of particular interest is the ability to customize how
+<code>gesel</code> obtains assets from the static file server. For this
+application, we override <code>gesel</code>’s default download function
+to instruct the browser to cache the responses on disk. This means that
+the user can avoid re-downloading the database files upon subsequent
+visits to the application. On a more technical note, we perform the
+download via a proxy to provide the correct cross-origin resource
+sharing (CORS) headers; this is only necessary as GitHub does not
+provide public CORS access to all of its resources, and can be omitted
+for servers that are more appropriately configured.</p>
+<p>It is worth remembering that this particular website is just a
+demonstration of <code>gesel</code>’s capabilities. As
+<code>gesel</code> is a <a href="https://npmjs.com/package/gesel"><code>npm</code> package</a>, it
+can be easily incorporated into new or existing web applications by
+following the standard <code>npm</code> installation process. Each
+application is given the freedom to decide how it wants to conduct the
+gene set search. For example, some of our internal applications accept a
+user-supplied gene list but do not support free-text queries, while
+others are only interested in finding the sets containing a single gene
+of interest. This decision then determines whether an application should
+use the full client-side or on-demand request modes.</p>
 </div>
 <div id="further-comments" class="section level1">
 <h1>Further comments</h1>
+<p><code>gesel</code>’s design is greatly inspired by the “edge
+computing” paradigm. The idea is to process data at or near the “edge”
+of the network (e.g., on client devices) rather than centralizing the
+compute in a data center. By doing so, we can process user requests at
+greater speed and volume by avoiding a round-trip through the network.
+From a developer perspective, performing the compute on the client is
+appealing as it requires very little maintenance; there is no need to
+deploy and monitor a custom backend, and concerns over scaling and
+downtime are effectively irrelevant. Indeed, if the analysis of
+single-cell data can be migrated to the client <span class="citation">(A. Lun and Kancherla 2022)</span>, it is
+straightfoward to do the same for a relatively lightweight task like
+gene set search.</p>
+<p>We note that <code>gesel</code>’s range requests could be improved by
+bundling multiple ranges into a single request. This reduces the burden
+on the server and network by reducing the number of separate requests,
+e.g., when finding the overlapping sets for multiple genes. While
+sensible, we have not implemented this approach because GitHub does not
+currently respect multipart ranges and we don’t have enough
+discretionary income to pay for our own static file server. Another
+potential improvement is to compress each requested byte range (e.g.,
+with DEFLATE) during database preparation, thus reducing the number of
+bytes that need to be transferred per range request. This is unlikely to
+have much of an effect at the current database size, given that each
+range request involves fewer than 300 bytes on average. Nonetheless,
+both of these ideas may provide some opportunities for improving
+performance as the queries and databases increase in size.</p>
 </div>
 <div id="acknowledgements" class="section level1">
 <h1>Acknowledgements</h1>
+<p>Thanks to Chris Bolen and XXX, for the scientific questions that
+motivated the development of this library; Hector Corrado Bravo, for his
+feedback on the uselessness of the early versions of the free-text
+search; and Allison Vuong and Luke Hoberecht, for recovering ATLL’s
+scarf when he forgot it while thinking about the library design during
+the team dinner.</p>
 </div>
 <div id="references" class="section level1 unnumbered">
 <h1 class="unnumbered">References</h1>
@@ -617,7 +683,14 @@ signatures database
 3.0</span>.”</span> <em>Bioinformatics</em> 27 (12): 1739–40.
 </div>
 <div id="ref-geselfeedstock" class="csl-entry">
-Lun, A. T. L. 2023. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="https://github.com/LTLA/gesel-feedstock">https://github.com/LTLA/gesel-feedstock</a>.
+Lun, A. T. L. 2023a. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="https://github.com/LTLA/gesel-feedstock">https://github.com/LTLA/gesel-feedstock</a>.
+</div>
+<div id="ref-geselapp" class="csl-entry">
+———. 2023b. <span>“Gesel Gene Set Search.”</span> <a href="https://ltla.github.io/gesel-app">https://ltla.github.io/gesel-app</a>.
+</div>
+<div id="ref-lun2022single" class="csl-entry">
+Lun, A., and J. Kancherla. 2022. <span>“Single-Cell Data Analysis in the
+Browser.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.03.02.482701">https://doi.org/10.1101/2022.03.02.482701</a>.
 </div>
 <div id="ref-pako" class="csl-entry">
 V., Puzrin, and Tupitsin A. 2023. <span>“Pako.”</span> <a href="https://www.npmjs.com/package/pako">https://www.npmjs.com/package/pako</a>.
