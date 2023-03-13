@@ -120,9 +120,10 @@ console.log(Array.from(set_members).map(i => all_symbols[i]));
 //   [ 'SLC6A5' ],
 //   [ 'SLC38A1' ]
 // ]
+```
 
 Each set also has some associated free text in its name and description.
-`gesel` provides functionality to query this text to find sets of interest, with simple support for wildcard searches.
+`gesel` can query this text to find sets of interest, with basic support for wildcard searches.
 
 ```js
 let hits = await gesel.searchSetText("9606", "B immunity");
