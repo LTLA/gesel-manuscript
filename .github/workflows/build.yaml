@@ -1,0 +1,47 @@
+on:
+  push:
+    branches: 
+      - master
+
+name: Build HTML
+
+jobs:
+  build:
+    name: Build HTML
+    runs-on: ubuntu-latest
+    container: rocker/rstudio:latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set directories
+      run: |
+        echo "R_PKG_DIR=${R_HOME}/site-library" >> $GITHUB_ENV
+
+    - name: Restore the package directory
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.R_PKG_DIR }}
+        key: preinstalled-packages
+
+    - name: Install dependencies
+      shell: Rscript {0}
+      run: install.packages(c("rmarkdown"))
+
+    - name: Compile paper
+      shell: Rscript {0}
+      run: |
+        dir.create("docs")
+        rmarkdown::render("paper.md")
+        file.rename("paper.html", "docs/index.html")
+
+    - name: Install rsync
+      run: |
+        apt-get update && apt-get install -y rsync
+
+    - name: GH Pages Deployment
+      uses: JamesIves/github-pages-deploy-action@v4.3.4
+      with:
+        branch: gh-pages # The branch the action should deploy to.
+        folder: docs
+        clean: true # Automatically remove deleted files from the deploy branch
+
