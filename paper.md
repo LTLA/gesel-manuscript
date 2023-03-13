@@ -17,10 +17,10 @@ bibliography: ref.bib
 # Summary
 
 `gesel` is a Javascript package for performing gene set enrichment analyses within the browser. 
-Developers can incorporate `gesel` into their web applications to provide gene set enrichment capabilities to their user experience.
-Importantly, `gesel` operates fully within the user's device, i.e., the client; there is no need for a dedicated backend server to perfrom the computation.
-This eliminates concerns around cost, scalability, latency, and data ownership that are associated with a backend architecture.
+All calculations are performed on the client device, without any no need for a dedicated backend server. 
+This eliminates concerns around cost, scalability, latency, and data ownership that are associated with a backend-based architecture.
 We demonstrate the use of `gesel` with a basic web application that performs enrichment analyses on user-supplied genes with sets derived from the Gene Ontology and MSigDB.
+Developers can also use `gesel` to incorporate gene set enrichment capabilities into their own applications.
 
 # Statement of need
 
@@ -40,7 +40,7 @@ the backend then performs the analysis and returns the results to the user's dev
 While common, this backend-based architecture is subject to a number of concerns around cost, scalability, latency, and data ownership.
 The application maintainer is responsible for provisioning, deploying, monitoring and maintaining a backend server, which requires both money and time.
 The maintainer is also responsible for scaling up the backend compute in response to increased usage, further increasing costs in an unpredictable manner. 
-The user-supplied lists need to be transferred to the backend and the results need to be transferred back, introducing latency to the user experience.
+The user-supplied lists need to be transferred to the backend and the results need to be transferred back to the client, introducing latency to the user experience.
 Finally, the fact that the user's inputs are accessible to the backend introduces potential issues of data ownership, e.g., for confidential biomarker lists or signatures.
 
 Here, we present `gesel` (https://npmjs.com/package/gesel), a Javascript library for gene set enrichment analyses that operates fully inside the client.
@@ -61,7 +61,7 @@ let user_supplied = [ "SNAP25", "NEUROD6", "ENSG00000123307", "1122" ];
 ```
 
 Our first task is to map these user-supplied gene identifiers to `gesel`'s internal identifiers.
-In this case, we are interested in human gene sets, hence the taxonomy ID in the `searchGenes()` call.
+In this case, we are interested in human gene sets, hence the taxonomy identifier in the `searchGenes()` call.
 
 ```js
 let input_mapped = await gesel.searchGenes("9606", user_supplied);
@@ -228,8 +228,8 @@ For each set, we sort the gene identifiers and store the differences between adj
 The same approach is used to shrink the mappings from each gene to the identifiers of the sets in which it belongs.
 Finally, we compress all files to be transferred, relying on the `pako` library [@pako] to perform decompression in the browser.
 
-By default, `gesel` uses a simple database that incorporates gene sets from the Gene Ontology [@ashburner2000go] and (for human and mouse) the majority of MSigDB [@liberzon2011molecular].
-(To avoid potential issues, only the MSigDB gene sets with permissive licensing are used here.)
+By default, `gesel` uses a simple database that incorporates gene sets from the Gene Ontology [@ashburner2000go] and, for human and mouse, the majority of the relevant MSigDB subcollections [@liberzon2011molecular].
+(To avoid potential issues, only the MSigDB collections with permissive licensing are used here.)
 This is currently hosted for free on GitHub without any need for a specialized backend server.
 However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various HTTP requests.
 For example, we adapted the scripts in the feedstock repository to create a company-specific database of custom gene sets based on biomarker lists and other signatures. 
@@ -250,7 +250,7 @@ This means that the user can avoid re-downloading the database files upon subseq
 On a more technical note, we perform the download via a proxy to provide the correct cross-origin resource sharing (CORS) headers;
 this is only necessary as GitHub does not provide public CORS access to all of its resources, and can be omitted for servers that are more appropriately configured. 
 
-As `gesel` is a `npm` package, it can be easily incorporated into applications such as our demonstration site by following the standard `npm` installation process.
+Our demonstration site follows the standard `npm` installation process to access `gesel`'s functionality, and the same approach can be used by any other developer of web applications.
 Each application is free to decide how it wants to conduct the gene set search.
 The demonstration site uses almost all of `gesel`'s functionality, but this need not be the case - 
 for example, some of our internal applications accept a user-supplied gene list but do not support free-text queries,
