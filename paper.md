@@ -165,7 +165,7 @@ so full client-side operation is simple and practical in most cases.
 In the on-demand request mode, `gesel` will perform HTTP range requests to fetch relevant slices of each database file.
 For example, `findOverlappingSets()` needs to obtain the mapping of each gene to the gene sets of which it is a member.
 Rather than downloading the entire mapping file for all genes, `gesel` will ask the server to return the range of bytes containing only the mapping for the desired gene.
-This avoids transferring the entire file to the client, reducing the burden on the client device and network.
+This is inspired by similar strategies for querying genomics data [@kancherla2020epiviz] and avoids transferring the entire file to the client, reducing the burden on the client device and network.
 It is suited for applications that expect only sporadic usage of `gesel` such that an up-front download of the entire database cannot be justified.
 It is also more scalable as the number of gene sets increases into the millions, where the total size of an up-front download may exceed 1 GB and become impractical.
 Obviously, using this mode involves increased network activity and latency from multiple range requests if `gesel` functions are frequently called.
@@ -189,17 +189,17 @@ and the identities of the sets associated with each token generated from the nam
 We expect one set of files per species, meaning that only the relevant files are transferred to the client when one species (usually human or mouse) is of interest.
 
 We apply some standard tricks to reduce the transfer size of the database files, particularly for the mappings between sets and their genes.
-We convert all sets and genes into integer identifiers to avoid handling large, arbitrarily named strings.
+We convert all sets and genes into integer identifiers to avoid handling large arbitrarily named strings.
 For each set, we sort the gene identifiers and store the differences between adjacent values, decreasing the number of digits (and bytes) that need to be stored and transferred.
 `gesel` will then recover the gene identifiers by computing a cumulative sum for each set on the client machine.
 The same approach is used to shrink the mappings from each gene to the identifiers of the sets in which it belongs.
 Finally, we compress all files to be transferred, relying on the `pako` library [@pako] to perform decompression in the browser.
 
 By default, `gesel` uses a simple database that incorporates gene sets from the Gene Ontology [@ashburner2000go] and (for human and mouse) the majority of MSigDB [@liberzon2011molecular].
-(To avoid potential issues, only the gene sets with permissive licensing are used here.)
+(To avoid potential issues, only the MSigDB gene sets with permissive licensing are used here.)
 This is currently hosted for free on GitHub without any need for a specialized backend server.
-However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various function calls.
-For example, we created a database of company-specific gene sets based on biomarker lists, custom signatures, etc., with some simple adjustments of the scripts in the feedstock repository. 
+However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various HTTP requests.
+For example, we adapted the scripts in the feedstock repository to create a company-specific database of custom gene sets based on biomarker lists and other signatures. 
 This is hosted inside our internal network for querying by our in-house applications.
 
 # Demonstration 
@@ -211,18 +211,18 @@ All matching gene sets are shown in a table, sorted by increasing p-value to foc
 Clicking on a row corresponding to a particular gene set shows the identities of its genes, with highlights applied to those in the user-supplied list.
 In addition, the parameters of each search are captured by query strings, allowing users to easily save and share searches by copying the URL from the browser's address bar.
 
-Of particular interest is the ability to customize how `gesel` obtains assets from the static file server. 
-For this application, we override `gesel`'s default download function to instruct the browser to cache the responses on disk.
+One particularly useful feature of `gesel` is the ability to customize how it fetches assets from the static file server.
+For our demonstration application, we override `gesel`'s default download function to instruct the browser to cache the responses on disk.
 This means that the user can avoid re-downloading the database files upon subsequent visits to the application.
 On a more technical note, we perform the download via a proxy to provide the correct cross-origin resource sharing (CORS) headers;
 this is only necessary as GitHub does not provide public CORS access to all of its resources, and can be omitted for servers that are more appropriately configured. 
 
-It is worth remembering that this particular website is just a demonstration of `gesel`'s capabilities.
-As `gesel` is a [`npm` package](https://npmjs.com/package/gesel), it can be easily incorporated into new or existing web applications by following the standard `npm` installation process.
-Each application is given the freedom to decide how it wants to conduct the gene set search.
-For example, some of our internal applications accept a user-supplied gene list but do not support free-text queries,
+As `gesel` is a `npm` package, it can be easily incorporated into applications such as our demonstration site by following the standard `npm` installation process.
+Each application is free to decide how it wants to conduct the gene set search.
+The demonstration site uses almost all of `gesel`'s functionality, but this need not be the case - 
+for example, some of our internal applications accept a user-supplied gene list but do not support free-text queries,
 while others are only interested in finding the sets containing a single gene of interest.
-This decision then determines whether an application should use the full client-side or on-demand request modes.
+This decision also determines whether an application should use the full client-side or on-demand request modes.
 
 # Further comments
 
@@ -233,16 +233,16 @@ From a developer perspective, performing the compute on the client is appealing 
 there is no need to deploy and monitor a custom backend, and concerns over scaling and downtime are effectively irrelevant.
 Indeed, if the analysis of single-cell data can be migrated to the client [@lun2022single], it is straightfoward to do the same for a relatively lightweight task like gene set search.
 
-We note that `gesel`'s range requests could be improved by bundling multiple ranges into a single request.
-This reduces the burden on the server and network by reducing the number of separate requests, e.g., when finding the overlapping sets for multiple genes.
-While sensible, we have not implemented this approach because GitHub does not currently respect multipart ranges and we don't have enough discretionary income to pay for our own static file server.
-Another potential improvement is to compress each requested byte range (e.g., with DEFLATE) during database preparation, thus reducing the number of bytes that need to be transferred per range request.
+We note that there is some room for improvement in `gesel`'s range requests.
+We could bundle multiple ranges into a single request, reducing the burden on the server and network by avoiding separate requests, e.g., when querying the overlapping sets for multiple genes.
+While sensible, we have not implemented this approach because GitHub does not currently respect multipart ranges and we don't want to pay for our own static hosting.
+We could also compress each requested byte range (e.g., with DEFLATE) during database preparation, thus reducing the number of bytes that need to be transferred per range request.
 This is unlikely to have much of an effect at the current database size, given that each range request involves fewer than 300 bytes on average.
 Nonetheless, both of these ideas may provide some opportunities for improving performance as the queries and databases increase in size.
 
 # Acknowledgements
 
-Thanks to Chris Bolen and XXX, for the scientific questions that motivated the development of this library;
+Thanks to Chris Bolen and colleagues, for the scientific questions that motivated the development of this library;
 Hector Corrado Bravo, for his feedback on the uselessness of the early versions of the free-text search;
 and Allison Vuong and Luke Hoberecht, for recovering ATLL's scarf when he forgot it while thinking about the library design during the team dinner.
 
