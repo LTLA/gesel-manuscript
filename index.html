@@ -12,7 +12,7 @@
 
 <meta name="date" content="2023-03-12" />
 
-<title>gesel: a Javascript package for client-side gene search searches</title>
+<title>gesel: a Javascript package for client-side gene set enrichment</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -372,7 +372,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">gesel: a Javascript package for client-side
-gene search searches</h1>
+gene set enrichment</h1>
 <h4 class="date">12 March 2023</h4>
 
 </div>
@@ -383,13 +383,65 @@ gene search searches</h1>
 </div>
 <div id="statement-of-need" class="section level1">
 <h1>Statement of need</h1>
+<p>Gene set enrichment analyses (GSEA) are commonly used to interpret
+the biological activity of a user-supplied list of interesting genes
+<span class="citation">(Subramanian et al. 2005)</span>. Briefly, this
+task involves quantifying the enrichment of each reference gene set’s
+members inside the user-supplied list, where the reference sets are
+derived from a variety of sources such as previous experimental studies
+or <em>de novo</em> computational analyses. GSEA allows scientists to
+summarize a large list of gene identifiers into a tangible biological
+concept such as “syntaxin binding” or “T cell receptor signaling
+pathway”. User-supplied lists are most typically derived from
+differential expression analyses of transcriptome-wide assays like RNA
+sequencing, but any list of genes can be used here, e.g.,
+cluster-specific marker lists from single-cell RNA sequencing
+studies.</p>
+<p>Given the popularity of GSEA in transcriptomics, it is not surprising
+that many statistical methods and implementations are already available
+to perform this analysis. Most existing GSEA tools operate inside
+frameworks like R/Bioconductor <span class="citation">(Young et al.
+2010; Wu and Smyth 2012; Korotkevich et al. 2021)</span> and require
+both installation of software and associated programming knowledge to
+use. Web applications like Enrichr and GeneTrail <span class="citation">(Chen et al. 2013; Backes et al. 2007)</span> provide
+more user-friendly interfaces that require less prior computational
+knowledge, targeted to the majority of bench scientists. These
+applications use a conventional backend architecture where the browser
+sends a request containing the user-supplied list of genes to a backend
+server; the backend then performs the analysis and returns the results
+to the user’s device (i.e., the client) for inspection.</p>
+<p>While common, this backend-based architecture is subject to a number
+of concerns around cost, scalability, latency, and data ownership. The
+application maintainer is responsible for provisioning, deploying,
+monitoring and maintaining a backend server, which requires both money
+and time. The maintainer is also responsible for scaling up the backend
+compute in response to increased usage, further increasing costs in an
+unpredictable manner. The user-supplied lists need to be transferred to
+the backend and the results need to be transferred back, introducing
+latency to the user experience. Finally, the fact that the user’s inputs
+are accessible to the backend introduces potential issues of data
+ownership, e.g., for confidential biomarker lists or signatures.</p>
+<p>Here, we present <code>gesel</code> (<a href="https://npmjs.com/packages/gesel" class="uri">https://npmjs.com/packages/gesel</a>), a Javascript library
+for gene set enrichment analyses that operates fully inside the client.
+Web applications can easily incorporate <code>gesel</code> via the
+standard <code>npm</code> installation process, enabling developers to
+create user-friendly interfaces for GSEA in different contexts. The
+browser will then handle all GSEA-related computation within these
+applications, eliminating the responsibility of maintaining a backend
+and avoiding any transfer of user data. We demonstrate the use of
+<code>gesel</code> by creating a simple web application (<a href="https://ltla.github.io/gesel-app" class="uri">https://ltla.github.io/gesel-app</a>) for identifying
+interesting gene sets based on overlaps with user-supplied lists.</p>
 </div>
 <div id="usage" class="section level1">
 <h1>Usage</h1>
-<p><code>gesel</code> aims to find the gene sets that overlap a
-user-supplied list of genes. To demonstrate, we’ll consider the
-following list of gene symbols mixed with Ensembl and Entrez
-identifiers.</p>
+<p><code>gesel</code>’s analysis involves testing for significant
+overlap between each reference gene set and the user-supplied list of
+genes. While this is the simplest form of GSEA, it is still effective
+and avoids the need for users to specify a ranking across the supplied
+genes. The algorithm can also be phrased as a search for the gene sets
+that contain at least one entry of the user-supplied list. To
+demonstrate, consider the following list of gene symbols mixed with
+Ensembl and Entrez identifiers.</p>
 <pre class="js"><code>let user_supplied = [ &quot;SNAP25&quot;, &quot;NEUROD6&quot;, &quot;ENSG00000123307&quot;, &quot;1122&quot; ];</code></pre>
 <p>Our first task is to map these user-supplied gene identifiers to
 <code>gesel</code>’s internal identifiers. In this case, we are
@@ -398,10 +450,10 @@ interested in human gene sets, hence the taxonomy ID in the
 <pre class="js"><code>let input_mapped = await gesel.searchGenes(&quot;9606&quot;, user_supplied);
 console.log(input_mapped);
 // [ [ 4639 ], [ 12767 ], [ 12577 ], [ 828 ] ]</code></pre>
-<p>To simplify matters, we’ll take the first matching <code>gesel</code>
-gene identifier for each user-supplied gene. Other applications may
-prefer to handle multi-mapping genes by, e.g., throwing an error to
-require clarification from the user.</p>
+<p>To simplify matters, we will ony use the first matching
+<code>gesel</code> gene identifier for each user-supplied gene. Other
+applications may prefer to handle multi-mapping genes by, e.g., throwing
+an error to require clarification from the user.</p>
 <pre class="js"><code>let input_list = [];
 for (const x of input_mapped) {
     if (x.length &gt;= 1) {
@@ -476,7 +528,8 @@ console.log(Array.from(set_members).map(i =&gt; all_symbols[i]));
 // ]</code></pre>
 <p>Each set also has some associated free text in its name and
 description. <code>gesel</code> can query this text to find sets of
-interest, with basic support for wildcard searches.</p>
+interest, with some basic support for the <code>?</code> and
+<code>*</code> wildcards.</p>
 <pre class="js"><code>let hits = await gesel.searchSetText(&quot;9606&quot;, &quot;B immunity&quot;);
 let first_hit = await gesel.fetchSingleSet(&quot;9606&quot;, hits[0]);
 // {
@@ -508,7 +561,7 @@ client-side” mode and a more lightweight “on-demand request” mode.</p>
 relevant database files from a static file server to the client. All
 calls to <code>gesel</code> functions will then perform queries directly
 on the downloaded files; this includes the identification of overlapping
-sets, searching on the set-related text, and simple extraction of
+sets, querying the set-related text, and simple extraction of
 per-set/collection details. In this mode, the user pays an up-front cost
 for the initial download such that all subsequent calculations are fully
 handled within the client. This avoids any further network activity and
@@ -589,23 +642,25 @@ different database by simply changing the URL used in the various HTTP
 requests. For example, we adapted the scripts in the feedstock
 repository to create a company-specific database of custom gene sets
 based on biomarker lists and other signatures. This is hosted inside our
-internal network for querying by our in-house applications.</p>
+internal network for use by our in-house <code>gesel</code>-based
+applications.</p>
 </div>
 <div id="demonstration" class="section level1">
 <h1>Demonstration</h1>
 <p>To demonstrate the functionality of <code>gesel</code>, we developed
-a simple web application that searches for interesting gene sets <span class="citation">(A. T. L. Lun 2023b)</span>. This accepts several
-parameters - namely, the species of interest, the available collections
-for that species, a list of user-supplied genes, and a free-text query.
-The search returns a list of gene sets in the designated collections
-that overlap at least one user-supplied gene and satisfy the free-text
-query. All matching gene sets are shown in a table, sorted by increasing
-p-value to focus on those with significant enrichment. Clicking on a row
-corresponding to a particular gene set shows the identities of its
-genes, with highlights applied to those in the user-supplied list. In
-addition, the parameters of each search are captured by query strings,
-allowing users to easily save and share searches by copying the URL from
-the browser’s address bar.</p>
+a simple web application that tests for gene set enrichment among
+user-supplied genes <span class="citation">(A. T. L. Lun 2023b)</span>.
+This accepts several parameters - namely, the species of interest, the
+available collections for that species, a list of user-supplied genes,
+and a free-text query. The application then returns a list of gene sets
+in the designated collections that overlap at least one user-supplied
+gene and satisfy the free-text query. All matching gene sets are shown
+in a table, sorted by increasing p-value to focus on those with
+significant enrichment. Clicking on a row corresponding to a particular
+gene set shows the identities of its genes, with highlights applied to
+those in the user-supplied list. In addition, the parameters of each
+search are captured by query strings, allowing users to easily save and
+share searches by copying the URL from the browser’s address bar.</p>
 <p>One particularly useful feature of <code>gesel</code> is the ability
 to customize how it fetches assets from the static file server. For our
 demonstration application, we override <code>gesel</code>’s default
@@ -641,7 +696,7 @@ deploy and monitor a custom backend, and concerns over scaling and
 downtime are effectively irrelevant. Indeed, if the analysis of
 single-cell data can be migrated to the client <span class="citation">(A. Lun and Kancherla 2022)</span>, it is
 straightfoward to do the same for a relatively lightweight task like
-gene set search.</p>
+GSEA.</p>
 <p>We note that there is some room for improvement in
 <code>gesel</code>’s range requests. We could bundle multiple ranges
 into a single request, reducing the burden on the server and network by
@@ -676,12 +731,30 @@ biology. <span>T</span>he <span>G</span>ene <span>O</span>ntology
 <span>C</span>onsortium</span>.”</span> <em>Nat Genet</em> 25 (1):
 25–29.
 </div>
+<div id="ref-backes2007genetrail" class="csl-entry">
+Backes, C., A. Keller, J. Kuentzer, B. Kneissl, N. Comtesse, Y. A.
+Elnakady, R. ller, E. Meese, and H. P. Lenhof. 2007. <span>“<span class="nocase"><span>G</span>ene<span>T</span>rail–advanced gene set
+enrichment analysis</span>.”</span> <em>Nucleic Acids Res</em> 35 (Web
+Server issue): W186–192.
+</div>
+<div id="ref-chen2013enrichr" class="csl-entry">
+Chen, E. Y., C. M. Tan, Y. Kou, Q. Duan, Z. Wang, G. V. Meirelles, N. R.
+Clark, and A. Ma’ayan. 2013. <span>“<span class="nocase"><span>E</span>nrichr: interactive and collaborative
+<span>H</span><span>T</span><span>M</span><span>L</span>5 gene list
+enrichment analysis tool</span>.”</span> <em>BMC Bioinformatics</em> 14
+(April): 128.
+</div>
 <div id="ref-kancherla2020epiviz" class="csl-entry">
 Kancherla, J., Y. Yang, H. Chae, and H. Corrada Bravo. 2020.
 <span>“<span class="nocase"><span>E</span>piviz <span>F</span>ile
 <span>S</span>erver: <span>Q</span>uery, transform and interactively
 explore data from indexed genomic files</span>.”</span>
 <em>Bioinformatics</em> 36 (18): 4682–90.
+</div>
+<div id="ref-korotkevich2021fast" class="csl-entry">
+Korotkevich, G., V. Sukhov, N. Budin, B. Shpak, M. N. Artyomov, and A.
+Sergushichev. 2021. <span>“Fast Gene Set Enrichment Analysis.”</span>
+<em>bioRxiv</em>. <a href="https://doi.org/10.1101/060012">https://doi.org/10.1101/060012</a>.
 </div>
 <div id="ref-liberzon2011molecular" class="csl-entry">
 Liberzon, A., A. Subramanian, R. Pinchback, H. ttir, P. Tamayo, and J.
@@ -700,8 +773,26 @@ Lun, A. T. L. 2023a. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="
 Lun, A., and J. Kancherla. 2022. <span>“Single-Cell Data Analysis in the
 Browser.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.03.02.482701">https://doi.org/10.1101/2022.03.02.482701</a>.
 </div>
+<div id="ref-subramanian2005gene" class="csl-entry">
+Subramanian, A., P. Tamayo, V. K. Mootha, S. Mukherjee, B. L. Ebert, M.
+A. Gillette, A. Paulovich, et al. 2005. <span>“<span class="nocase"><span>G</span>ene set enrichment analysis: a
+knowledge-based approach for interpreting genome-wide expression
+profiles</span>.”</span> <em>Proc Natl Acad Sci U S A</em> 102 (43):
+15545–50.
+</div>
 <div id="ref-pako" class="csl-entry">
 V., Puzrin, and Tupitsin A. 2023. <span>“Pako.”</span> <a href="https://www.npmjs.com/package/pako">https://www.npmjs.com/package/pako</a>.
+</div>
+<div id="ref-wu2012camera" class="csl-entry">
+Wu, D., and G. K. Smyth. 2012. <span>“<span class="nocase"><span>C</span>amera: a competitive gene set test
+accounting for inter-gene correlation</span>.”</span> <em>Nucleic Acids
+Res</em> 40 (17): e133.
+</div>
+<div id="ref-young2010gene" class="csl-entry">
+Young, M. D., M. J. Wakefield, G. K. Smyth, and A. Oshlack. 2010.
+<span>“<span class="nocase"><span>G</span>ene ontology analysis for
+<span>R</span><span>N</span><span>A</span>-seq: accounting for selection
+bias</span>.”</span> <em>Genome Biol</em> 11 (2): R14.
 </div>
 </div>
 </div>
