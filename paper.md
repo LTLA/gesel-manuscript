@@ -262,7 +262,7 @@ Nonetheless, both of these ideas may provide some opportunities for improving pe
 # Acknowledgements
 
 Thanks to Chris Bolen, Alejandro Chibly, Brandon Kayser and Xiangnan Guan, for the scientific questions that motivated the development of this library;
-Hector Corrado Bravo, for his feedback on the uselessness of the early versions of the free-text search;
+Hector Corrada Bravo, for his feedback on the uselessness of the early versions of the free-text search;
 and Allison Vuong and Luke Hoberecht, for recovering ATLL's scarf when he forgot it while thinking about the library design during a team dinner.
 
 # References
