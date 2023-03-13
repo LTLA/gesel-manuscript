@@ -389,7 +389,7 @@ client; there is no need for a dedicated backend server to perfrom the
 computation. This eliminates concerns around cost, scalability, latency,
 and data ownership that are associated with a backend architecture. We
 demonstrate the use of <code>gesel</code> with a basic web application
-that perform enrichment analyses on user-supplied genes with sets
+that performs enrichment analyses on user-supplied genes with sets
 derived from the Gene Ontology and MSigDB.</p>
 </div>
 <div id="statement-of-need" class="section level1">
@@ -642,8 +642,8 @@ transferred. <code>gesel</code> will then recover the gene identifiers
 by computing a cumulative sum for each set on the client machine. The
 same approach is used to shrink the mappings from each gene to the
 identifiers of the sets in which it belongs. Finally, we compress all
-files to be transferred, relying on the <code>pako</code> library <span class="citation">(V. and A. 2023)</span> to perform decompression in the
-browser.</p>
+files to be transferred, relying on the <code>pako</code> library <span class="citation">(Puzrin and Tupitsin 2023)</span> to perform
+decompression in the browser.</p>
 <p>By default, <code>gesel</code> uses a simple database that
 incorporates gene sets from the Gene Ontology <span class="citation">(Ashburner et al. 2000)</span> and (for human and
 mouse) the majority of MSigDB <span class="citation">(Liberzon et al.
@@ -786,15 +786,15 @@ Lun, A. T. L. 2023a. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="
 Lun, A., and J. Kancherla. 2022. <span>“Single-Cell Data Analysis in the
 Browser.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.03.02.482701">https://doi.org/10.1101/2022.03.02.482701</a>.
 </div>
+<div id="ref-pako" class="csl-entry">
+Puzrin, V., and A. Tupitsin. 2023. <span>“Pako.”</span> <a href="https://www.npmjs.com/package/pako">https://www.npmjs.com/package/pako</a>.
+</div>
 <div id="ref-subramanian2005gene" class="csl-entry">
 Subramanian, A., P. Tamayo, V. K. Mootha, S. Mukherjee, B. L. Ebert, M.
 A. Gillette, A. Paulovich, et al. 2005. <span>“<span class="nocase"><span>G</span>ene set enrichment analysis: a
 knowledge-based approach for interpreting genome-wide expression
 profiles</span>.”</span> <em>Proc Natl Acad Sci U S A</em> 102 (43):
 15545–50.
-</div>
-<div id="ref-pako" class="csl-entry">
-V., Puzrin, and Tupitsin A. 2023. <span>“Pako.”</span> <a href="https://www.npmjs.com/package/pako">https://www.npmjs.com/package/pako</a>.
 </div>
 <div id="ref-wu2012camera" class="csl-entry">
 Wu, D., and G. K. Smyth. 2012. <span>“<span class="nocase"><span>C</span>amera: a competitive gene set test
