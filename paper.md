@@ -197,12 +197,25 @@ Finally, we compress all files to be transferred, relying on the `pako` library 
 
 By default, `gesel` uses a simple database that incorporates gene sets from the Gene Ontology [@ashburner2000go] and (for human and mouse) the majority of MSigDB [@liberzon2011molecular].
 (To avoid potential issues, only the gene sets with permissive licensing are used here.)
-This is currently hosted for free on GitHub using the Releases of the feedstock repository, without any need for a specialized backend server.
+This is currently hosted for free on GitHub without any need for a specialized backend server.
 However, application developers can easily point `gesel` to a different database by simply changing the URL used in the various function calls.
 For example, we created a database of company-specific gene sets based on biomarker lists, custom signatures, etc., with some simple adjustments of the scripts in the feedstock repository. 
 This is hosted inside our internal network for querying by our in-house applications.
 
 # Demonstration 
+
+To demonstrate the functionality of `gesel`, we developed a simple web application that searches for interesting gene sets [@geselapp].
+This accepts several parameters - namely, the species of interest, the available collections for that species, a list of user-supplied genes, and a free-text query.
+The search returns a list of gene sets in the designated collections that overlap at least one user-supplied gene and satisfy the free-text query.
+All matching gene sets are shown in a table, sorted by increasing p-value to focus on those with significant enrichment.
+Clicking on a row corresponding to a particular gene set shows the identities of its genes, with highlights applied to those in the user-supplied list.
+In addition, the parameters of each search are captured by query strings, allowing users to easily save and share searches by copying the URL from the browser's address bar.
+
+Of particular interest is the ability to customize how `gesel` obtains assets from the static file server. 
+For this application, we override `gesel`'s default download function to instruct the browser to cache the responses on disk.
+This means that the user can avoid re-downloading the database files upon subsequent visits to the application.
+On a more technical note, we perform the download via a proxy to provide the correct cross-origin resource sharing (CORS) headers;
+this is only necessary as GitHub does not provide public CORS access to all of its resources, and can be omitted for correctly configured servers.
 
 # Further comments
 
