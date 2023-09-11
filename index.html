@@ -567,7 +567,7 @@ the output of <code>findOverlappingSets()</code> to implement advanced
 searches in downstream applications.</p>
 <p>To demonstrate <code>gesel</code>’s functionality, we developed a
 simple web application that tests for gene set enrichment among
-user-supplied genes <span class="citation">(Lun and Kancherla
+user-supplied genes <span class="citation">(A. Lun and Kancherla
 2023)</span>. Given several parameters such as a list of user-supplied
 genes and a free-text query, the application shows a table containing
 the gene sets that satisfy the search parameters. Sets are sorted by
@@ -625,11 +625,11 @@ importantly, as each user brings their own compute to the application,
 it scales to any number of users at no cost to us (i.e., the
 <code>gesel</code> maintainers). Indeed, we consider
 <code>gesel</code>’s development to be a natural consequence of the
-“client-side compute” philosophy described in <span class="citation">Lun
-and Kancherla (2022)</span>.</p>
+“client-side compute” philosophy described in <span class="citation">A.
+T. l. Lun and Kancherla (2023)</span>.</p>
 <p><code>gesel</code> works with any database files prepared according
-to the contract outlined in the feedstock repository <span class="citation">(Lun 2023)</span>. This uses some standard compression
-tricks to reduce the size of the transferred database files,
+to the contract outlined in the feedstock repository <span class="citation">(A. Lun 2023)</span>. This uses some standard
+compression tricks to reduce the size of the transferred database files,
 particularly for the mappings between sets and their genes.
 <code>gesel</code>’s default database incorporates public gene sets from
 the Gene Ontology <span class="citation">(Ashburner et al. 2000)</span>
@@ -728,12 +728,14 @@ Tamayo, and J. P. Mesirov. 2011. <span>“<span class="nocase"><span>M</span>ole
 <div id="ref-geselfeedstock" class="csl-entry">
 Lun, A. 2023. <span>“Build Gene Sets to Feed Gesel.”</span> <a href="https://github.com/LTLA/gesel-feedstock">https://github.com/LTLA/gesel-feedstock</a>.
 </div>
-<div id="ref-lun2022single" class="csl-entry">
-Lun, A., and J. Kancherla. 2022. <span>“Single-Cell Data Analysis in the
-Browser.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.03.02.482701">https://doi.org/10.1101/2022.03.02.482701</a>.
+<div id="ref-lun2023single" class="csl-entry">
+Lun, Aaron T. l., and Jayaram Kancherla. 2023. <span>“Powering
+Single-Cell Analyses in the Browser with WebAssembly.”</span>
+<em>Journal of Open Source Software</em> 8 (89): 5603. <a href="https://doi.org/10.21105/joss.05603">https://doi.org/10.21105/joss.05603</a>.
 </div>
 <div id="ref-geselapp" class="csl-entry">
-———. 2023. <span>“Gesel Gene Set Search.”</span> <a href="https://ltla.github.io/gesel-app">https://ltla.github.io/gesel-app</a>.
+Lun, A., and J. Kancherla. 2023. <span>“Gesel Gene Set Search.”</span>
+<a href="https://ltla.github.io/gesel-app">https://ltla.github.io/gesel-app</a>.
 </div>
 <div id="ref-subramanian2005gene" class="csl-entry">
 Subramanian, A., P. Tamayo, V. K. Mootha, S. Mukherjee, B. L. Ebert, M.
