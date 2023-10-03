@@ -628,9 +628,11 @@ it scales to any number of users at no cost to us (i.e., the
 “client-side compute” philosophy described in <span class="citation">A.
 T. L. Lun and Kancherla (2023)</span>.</p>
 <p><code>gesel</code> works with any database files prepared according
-to the contract outlined in the feedstock repository <span class="citation">(A. Lun 2023)</span>. This uses some standard
-compression tricks to reduce the size of the transferred database files,
-particularly for the mappings between sets and their genes.
+to the contract outlined in the feedstock repository <span class="citation">(A. Lun 2023)</span>. These are simple tab-separated
+text files containing information about the genes, sets, collections,
+the mappings between them, and the byte ranges for each entry. To reduce
+data transfer, we use some standard compression methods like delta
+encoding the gene identifiers and Gzip-compressing the byte range files.
 <code>gesel</code>’s default database incorporates public gene sets from
 the Gene Ontology <span class="citation">(Ashburner et al. 2000)</span>
 and, for human and mouse, the majority of the relevant MSigDB
