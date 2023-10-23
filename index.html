@@ -574,9 +574,14 @@ the gene sets that satisfy the search parameters. Sets are sorted by
 increasing p-value to focus on those with significant enrichment.
 Clicking on a row corresponding to a particular gene set shows the
 identities of its genes, with emphasis applied to those in the
-user-supplied list. In addition, the parameters of each search are
-captured by query strings, allowing users to easily save and share
-searches by copying the URL from the browser’s address bar.</p>
+user-supplied list. The parameters of each search are captured by query
+strings, allowing users to easily save and share searches by copying the
+URL from the browser’s address bar. More adventurous users can also
+navigate a 2-dimensional embedding <span class="citation">(Van der
+Maaten and Hinton 2008)</span> of gene sets, where sets with similar
+members are placed next to each other on the embedding; this provides an
+alternative representation of the search results that encourages
+exploration of related gene sets.</p>
 </div>
 <div id="implementation-details" class="section level1">
 <h1>Implementation details</h1>
@@ -747,6 +752,11 @@ A. Gillette, A. Paulovich, et al. 2005. <span>“<span class="nocase"><span>G</s
 knowledge-based approach for interpreting genome-wide expression
 profiles</span>.”</span> <em>Proc Natl Acad Sci U S A</em> 102 (43):
 15545–50. <a href="https://doi.org/10.1073/pnas.0506580102">https://doi.org/10.1073/pnas.0506580102</a>.
+</div>
+<div id="ref-van2008visualizing" class="csl-entry">
+Van der Maaten, Laurens, and Geoffrey Hinton. 2008. <span>“Visualizing
+Data Using t-SNE.”</span> <em>Journal of Machine Learning Research</em>
+9 (11).
 </div>
 <div id="ref-wu2012camera" class="csl-entry">
 Wu, D., and G. K. Smyth. 2012. <span>“<span class="nocase"><span>C</span>amera: a competitive gene set test
